@@ -1,0 +1,108 @@
+#{extends 'main.html' /}
+#{set title:'Persistent tree' /}
+
+<div id="actions">
+  <input type="button" id="create_drive" value="Create drive"/>
+  <input type="button" id="create_folder" value="Create folder"/>
+  <input type="button" id="remove" value="Remove"/>
+</div>
+
+<div id="testTree" class="tree"></div>
+
+<!-- JavaScript necessary for the tree -->
+<script type="text/javascript">
+  $(function () {
+    $("#testTree")
+            .jstree({
+                        // the list of plugins to include
+                        "plugins" : [ "json_data", "ui", "crrm",  "types", "contextmenu", "hotkeys", "themes" ],
+
+                        // Plugin configuration
+                        "json_data" : {
+                          "ajax" : {
+                            "url" : "@{tree.TreeController.getChildren()}",
+                            // this function is executed in the instance's scope (this refers to the tree instance)
+                            // the parameter is the node being loaded (may be -1, 0, or undefined when loading the root nodes)
+                            "data" : function (n) {
+                              // the result is fed to the AJAX request `data` option
+                              return {
+                                "id" : n.attr ? n.attr("id").replace("node_", "") : -1,
+                                "treeId" : "testTree"
+                              };
+                            }
+                          }
+                        },
+                        "types" : {
+                          // I set both options to -2, as I do not need depth and children count checking
+                          // Those two checks may slow jstree a lot, so use only when needed
+                          "max_depth" : -2,
+                          "max_children" : -2,
+                          // I want only `drive` nodes to be root nodes
+                          // This will prevent moving or creating any other type as a root node
+//                          "valid_children" : [ "folder", "default", "root" ],
+                          "types" : {
+                            // The default type
+                            "default" : {
+                              // I want this type to have no children (so only leaf nodes)
+                              // In my case - those are files
+                              "valid_children" : "none",
+                              // If we specify an icon for the default type it WILL OVERRIDE the theme icons
+                              "icon" : {
+                                "image" : "@{'public/images/jstree/file.png'}"
+                              }
+                            },
+                            "folder" : {
+                              "valid_children" : [ "default", "folder" ],
+                              "icon" : {
+                                "image" : "@{'public/images/jstree/folder.png'}"
+                              }
+                            },
+                            "drive" : {
+                              "valid_children" : [ "default", "folder" ],
+                              "icon" : {
+                                "image" : "@{'public/images/jstree/root.png'}"
+                              },
+                              // those options prevent the functions with the same name to be used on the `drive` type nodes
+                              // internally the `before` event is used
+                              "start_drag" : false,
+                              "move_node" : false,
+                              "delete_node" : true,
+                              "remove" : true
+                            }
+                          }
+                        },
+                        "hotkeys": {
+                          "Ctrl+x" : function() {
+                            this.cut(null)
+                          },
+                          "Ctrl+v" : function() {
+                            this.paste(null)
+                          },
+                          "Ctrl+c" : function() {
+                            this.copy(null)
+                          },
+                          "Ctrl+n" : function() {
+                            this.create_node(null, "after", {attr:{"rel":"folder"}});
+                          }
+                        }
+                    });
+    #{tree.common id:"testTree", controller:"tree.TreeController" /}
+  });
+</script>
+
+
+<script type="text/javascript">
+
+  $(function () {
+    $("#create_drive").click(function () {
+      $("#testTree").jstree("create", null, "last", {attr:{"rel":"drive"}});
+    })
+    $("#create_folder").click(function () {
+      $("#testTree").jstree("create", null, "last", {attr:{"rel":"folder"}});
+    })
+    $("#remove").click(function () {
+      $("#testTree").jstree("remove", null);
+    })
+  });
+
+</script>

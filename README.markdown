@@ -1,0 +1,1 @@
+Soon will come a description of this module which offers an integration of JSTree (http://www.jstree.com/) for the Play! framework (http://playframework.org)

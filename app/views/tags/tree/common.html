@@ -1,0 +1,91 @@
+%{
+  def childrenRoute = play.mvc.Router.reverse(_controller + '.getChildren');
+  def createRoute = play.mvc.Router.reverse(_controller + '.create');
+  def removeRoute = play.mvc.Router.reverse(_controller + '.remove');
+  def renameRoute = play.mvc.Router.reverse(_controller + '.rename');
+  def moveRoute = play.mvc.Router.reverse(_controller + '.move');
+}%
+
+
+$("#${_id}").bind("create.jstree", function (e, data) {
+$.post(
+        "${createRoute}",
+{
+  "treeId" : "${_id}",
+  "parentId": data.rslt.parent.attr ? data.rslt.parent.attr("id").replace("node_", "") : -1,
+  "position" : data.rslt.position,
+  "name" : data.rslt.name,
+  "type" : data.rslt.obj.attr("rel")
+},
+        function (r) {
+          if (r.status) {
+            $(data.rslt.obj).attr("id", "node_" + r.id);
+          }
+          else {
+            $.jstree.rollback(data.rlbk);
+          }
+        }
+        );
+})
+      .bind("remove.jstree", function (e, data) {
+data.rslt.obj.each(function () {
+  $.ajax({
+    async : false,
+    type: 'DELETE',
+    url: "${removeRoute}",
+    data : {
+      "treeId" : "${_id}",
+      "id" : this.id.replace("node_", "")
+    },
+    success : function (r) {
+      if (!r.status) {
+        data.inst.refresh();
+      }
+    }
+  });
+});
+})
+      .bind("rename.jstree", function (e, data) {
+$.post(
+        "${renameRoute}",
+{
+  "treeId" : "${_id}",
+  "id" : data.rslt.obj.attr("id").replace("node_", ""),
+  "name" : data.rslt.new_name,
+  "type" : data.rslt.obj.attr("rel")
+},
+        function (r) {
+          if (!r.status) {
+            $.jstree.rollback(data.rlbk);
+          }
+        }
+        );
+})
+      .bind("move_node.jstree", function (e, data) {
+data.rslt.o.each(function (i) {
+  $.ajax({
+    async : false,
+    type: 'POST',
+    url: "${moveRoute}",
+    data : {
+      "treeId" : "${_id}",
+      "id" : $(this).attr("id").replace("node_", ""),
+      "target" : data.rslt.np.attr("id").replace("node_", ""),
+      "position" : data.rslt.cp + i,
+      "name" : data.rslt.name,
+      "copy" : data.rslt.cy ? true : false
+    },
+    success : function (r) {
+      if (!r.status) {
+        $.jstree.rollback(data.rlbk);
+      }
+      else {
+        $(data.rslt.oc).attr("id", "node_" + r.id);
+        if (data.rslt.cy && $(data.rslt.oc).children("UL").length) {
+          data.inst.refresh(data.inst._get_parent(data.rslt.oc));
+        }
+      }
+    }
+  });
+});
+});

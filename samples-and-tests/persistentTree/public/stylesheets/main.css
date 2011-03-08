@@ -1,0 +1,10 @@
+body {
+  margin: 0;
+  color: #333333;
+  font: 12px/1.4 arial, FreeSans, Helvetica, sans-serif;
+}
+
+div.tree {
+  width: 250px;
+  min-height: 400px;
+}

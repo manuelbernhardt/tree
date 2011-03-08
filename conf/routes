@@ -1,0 +1,12 @@
+# This file defines all module routes (Higher priority routes first)
+#
+# import these routes in the main app as :
+# *     /                       module:tree
+#
+# ~~~~
+
+GET     /tree                                   tree.TreeController.getChildren
+POST    /tree/create                            tree.TreeController.create
+POST    /tree/rename                            tree.TreeController.rename
+POST    /tree/move                              tree.TreeController.move
+DELETE  /tree/remove                            tree.TreeController.remove
