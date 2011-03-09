@@ -86,7 +86,7 @@ public abstract class AbstractTree implements TreeDataHandler {
      */
     protected abstract NodeType getRootType();
 
-    public List<? extends JSTreeNode> getChildren(Long parentId) {
+    public List<? extends JSTreeNode> getChildren(Long parentId, String[] args) {
         return storage.getChildren(parentId);
     }
 

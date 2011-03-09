@@ -13,7 +13,7 @@ public interface TreeDataHandler {
 
     String getName();
 
-    List<? extends JSTreeNode> getChildren(Long parentId);
+    List<? extends JSTreeNode> getChildren(Long parentId, String[] args);
 
     Long create(Long parentId, Long position, String name, String type);
 

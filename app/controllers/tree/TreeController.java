@@ -59,8 +59,8 @@ public class TreeController extends Controller {
         renderJSON(makeStatus(1, null).toString());
     }
 
-    public static void getChildren(String treeId, Long id) {
-        List<? extends JSTreeNode> children = Tree.getTree(treeId).getChildren(id);
+    public static void getChildren(String treeId, Long id, String... args) {
+        List<? extends JSTreeNode> children = Tree.getTree(treeId).getChildren(id, args);
         renderJSON(Tree.getGson().toJson(children));
     }
 
