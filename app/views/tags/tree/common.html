@@ -27,7 +27,7 @@ $.post(
         }
         );
 })
-      .bind("remove.jstree", function (e, data) {
+      .bind("delete_node.jstree", function (e, data) {
 data.rslt.obj.each(function () {
   $.ajax({
     async : false,
