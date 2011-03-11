@@ -5,6 +5,7 @@ import java.util.List;
 import com.google.gson.JsonObject;
 import models.tree.JSTreeNode;
 import play.mvc.Controller;
+import play.mvc.Util;
 
 /**
  * Generic controller for tree operations.
@@ -14,7 +15,11 @@ import play.mvc.Controller;
 public class TreeController extends Controller {
 
     public static void create(String treeId, Long parentId, Long position, String name, String type) {
+        createDirect(treeId, parentId, position, name, type);
+    }
 
+    @Util
+    public static void createDirect(String treeId, Long parentId, Long position, String name, String type) {
         Long node = Tree.getTree(treeId).create(parentId, position, name, type);
         JsonObject status = null;
         if (node == null) {
@@ -26,6 +31,11 @@ public class TreeController extends Controller {
     }
 
     public static void remove(String treeId, Long id) {
+        removeDirect(treeId, id);
+    }
+
+    @Util
+    public static void removeDirect(String treeId, Long id) {
         try {
             Tree.getTree(treeId).remove(id);
         } catch (Exception e) {
@@ -36,6 +46,11 @@ public class TreeController extends Controller {
     }
 
     public static void rename(String treeId, Long id, String name, String type) {
+        renameDirect(treeId, id, name, type);
+    }
+
+    @Util
+    public static void renameDirect(String treeId, Long id, String name, String type) {
         boolean renamed;
         renamed = Tree.getTree(treeId).rename(id, name, type);
         if (renamed) {
@@ -46,6 +61,11 @@ public class TreeController extends Controller {
     }
 
     public static void move(String treeId, Long id, Long target, Long position, String name, boolean copy) {
+        moveDirect(treeId, id, target, position, name, copy);
+    }
+
+    @Util
+    public static void moveDirect(String treeId, Long id, Long target, Long position, String name, boolean copy) {
         try {
             if (copy) {
                 Tree.getTree(treeId).copy(id, target, position);
@@ -60,6 +80,11 @@ public class TreeController extends Controller {
     }
 
     public static void getChildren(String treeId, Long id, String... args) {
+        getChildrenDirect(treeId, id, args);
+    }
+
+    @Util
+    public static void getChildrenDirect(String treeId, Long id, String[] args) {
         List<? extends JSTreeNode> children = Tree.getTree(treeId).getChildren(id, args);
         renderJSON(Tree.getGson().toJson(children));
     }

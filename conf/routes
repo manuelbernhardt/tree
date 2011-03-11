@@ -5,7 +5,7 @@
 #
 # ~~~~
 
-GET     /tree                                   tree.TreeController.getChildren
+GET     /tree/{treeId}/{id}                     tree.TreeController.getChildren
 POST    /tree/create                            tree.TreeController.create
 POST    /tree/rename                            tree.TreeController.rename
 POST    /tree/move                              tree.TreeController.move
