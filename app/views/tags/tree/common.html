@@ -15,7 +15,9 @@ $.post(
   "parentId": data.rslt.parent.attr ? data.rslt.parent.attr("id").replace("node_", "") : -1,
   "position" : data.rslt.position,
   "name" : data.rslt.name,
-  "type" : data.rslt.obj.attr("rel")
+  "type" : data.rslt.obj.attr("rel"),
+  "id" : data.rslt.obj.attr("id") ? data.rslt.obj.attr("id") : -1
+
 },
         function (r) {
           if (r.status) {
@@ -35,7 +37,9 @@ data.rslt.obj.each(function () {
     url: "${removeRoute}",
     data : {
       "treeId" : "${_id}",
-      "id" : this.id.replace("node_", "")
+      "id" : this.id.replace("node_", ""),
+      "parentId": data.rslt.parent.attr ? data.rslt.parent.attr("id").replace("node_", "") : -1,
+      "type" : data.rslt.obj.attr("rel")
     },
     success : function (r) {
       if (!r.status) {
