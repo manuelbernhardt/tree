@@ -90,7 +90,7 @@ public abstract class AbstractTree implements TreeDataHandler {
         return storage.getChildren(parentId);
     }
 
-    public Long create(Long parentId, Long position, String name, String type) {
+    public Long create(Long parentId, Long position, String name, String type, Long id) {
         NodeType nt = null;
         if (type == null) {
             nt = getRootType();
@@ -133,7 +133,7 @@ public abstract class AbstractTree implements TreeDataHandler {
         storage.move(id, target);
     }
 
-    public boolean remove(Long id, String type) throws Exception {
+    public boolean remove(Long id, Long parentId, String type) throws Exception {
         // TODO make configurable
         // FIXME return false if error
         storage.remove(id, true);

@@ -14,13 +14,13 @@ import play.mvc.Util;
  */
 public class TreeController extends Controller {
 
-    public static void create(String treeId, Long parentId, Long position, String name, String type) {
-        createDirect(treeId, parentId, position, name, type);
+    public static void create(String treeId, Long parentId, Long position, String name, String type, Long id) {
+        createDirect(treeId, parentId, position, name, type, id);
     }
 
     @Util
-    public static void createDirect(String treeId, Long parentId, Long position, String name, String type) {
-        Long node = Tree.getTree(treeId).create(parentId, position, name, type);
+    public static void createDirect(String treeId, Long parentId, Long position, String name, String type, Long id) {
+        Long node = Tree.getTree(treeId).create(parentId, position, name, type, id);
         JsonObject status = null;
         if (node == null) {
             status = makeStatus(0, null);
@@ -30,14 +30,14 @@ public class TreeController extends Controller {
         renderJSON(status.toString());
     }
 
-    public static void remove(String treeId, Long id, String type) {
-        removeDirect(treeId, id, type);
+    public static void remove(String treeId, Long id, Long parentId, String type) {
+        removeDirect(treeId, id, parentId, type);
     }
 
     @Util
-    public static void removeDirect(String treeId, Long id, String type) {
+    public static void removeDirect(String treeId, Long id, Long parentId, String type) {
         try {
-            Tree.getTree(treeId).remove(id, type);
+            Tree.getTree(treeId).remove(id, parentId, type);
         } catch (Throwable e) {
             e.printStackTrace();
             renderJSON(makeStatus(0, null).toString());

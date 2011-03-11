@@ -15,7 +15,7 @@ public interface TreeDataHandler {
 
     List<? extends JSTreeNode> getChildren(Long parentId, String[] args);
 
-    Long create(Long parentId, Long position, String name, String type);
+    Long create(Long parentId, Long position, String name, String type, Long id);
 
     boolean rename(Long id, String name, String type);
 
@@ -23,5 +23,5 @@ public interface TreeDataHandler {
 
     void move(Long id, Long target, Long position);
 
-    boolean remove(Long id, String type) throws Exception;
+    boolean remove(Long id, Long parentId, String type) throws Exception;
 }
