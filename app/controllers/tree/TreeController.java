@@ -30,15 +30,15 @@ public class TreeController extends Controller {
         renderJSON(status.toString());
     }
 
-    public static void remove(String treeId, Long id) {
-        removeDirect(treeId, id);
+    public static void remove(String treeId, Long id, String type) {
+        removeDirect(treeId, id, type);
     }
 
     @Util
-    public static void removeDirect(String treeId, Long id) {
+    public static void removeDirect(String treeId, Long id, String type) {
         try {
-            Tree.getTree(treeId).remove(id);
-        } catch (Exception e) {
+            Tree.getTree(treeId).remove(id, type);
+        } catch (Throwable e) {
             e.printStackTrace();
             renderJSON(makeStatus(0, null).toString());
         }
@@ -72,7 +72,7 @@ public class TreeController extends Controller {
             } else {
                 Tree.getTree(treeId).move(id, target, position);
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             renderJSON(makeStatus(0, null).toString());
         }
