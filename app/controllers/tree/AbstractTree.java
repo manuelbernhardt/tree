@@ -133,7 +133,7 @@ public abstract class AbstractTree implements TreeDataHandler {
         storage.move(id, target);
     }
 
-    public boolean remove(Long id, Long parentId, String type) throws Exception {
+    public boolean remove(Long id, Long parentId, String type, Map<String, String> args) {
         // TODO make configurable
         // FIXME return false if error
         storage.remove(id, true);

@@ -24,5 +24,5 @@ public interface TreeDataHandler {
 
     void move(Long id, Long target, Long position);
 
-    boolean remove(Long id, Long parentId, String type) throws Exception;
+    boolean remove(Long id, Long parentId, String type, Map<String, String> args);
 }

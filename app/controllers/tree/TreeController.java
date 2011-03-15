@@ -31,19 +31,18 @@ public class TreeController extends Controller {
         renderJSON(status.toString());
     }
 
-    public static void remove(String treeId, Long id, Long parentId, String type) {
-        removeDirect(treeId, id, parentId, type);
+    public static void remove(String treeId, Long id, Long parentId, String type, Map<String, String> args) {
+        removeDirect(treeId, id, parentId, type, args);
     }
 
     @Util
-    public static void removeDirect(String treeId, Long id, Long parentId, String type) {
-        try {
-            Tree.getTree(treeId).remove(id, parentId, type);
-        } catch (Throwable e) {
-            e.printStackTrace();
+    public static void removeDirect(String treeId, Long id, Long parentId, String type, Map<String, String> args) {
+        boolean removed = Tree.getTree(treeId).remove(id, parentId, type, args);
+        if(!removed) {
             renderJSON(makeStatus(0, null).toString());
+        } else {
+            renderJSON(makeStatus(1, null).toString());
         }
-        renderJSON(makeStatus(1, null).toString());
     }
 
     public static void rename(String treeId, Long id, String name, String type) {
