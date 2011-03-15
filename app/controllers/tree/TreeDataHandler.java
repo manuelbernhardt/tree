@@ -1,6 +1,7 @@
 package controllers.tree;
 
 import java.util.List;
+import java.util.Map;
 
 import models.tree.JSTreeNode;
 
@@ -13,9 +14,9 @@ public interface TreeDataHandler {
 
     String getName();
 
-    List<? extends JSTreeNode> getChildren(Long parentId, String[] args);
+    List<? extends JSTreeNode> getChildren(Long parentId, Map<String, String> args);
 
-    Long create(Long parentId, Long position, String name, String type, Long id);
+    Long create(Long parentId, Long position, String name, String type, Map<String, String> args);
 
     boolean rename(Long id, String name, String type);
 

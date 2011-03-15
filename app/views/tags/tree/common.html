@@ -16,7 +16,7 @@ $.post(
   "position" : data.rslt.position,
   "name" : data.rslt.name,
   "type" : data.rslt.obj.attr("rel"),
-  "id" : data.rslt.obj.attr("id") ? data.rslt.obj.attr("id") : -1
+  "args" : data.rslt.obj.data("args") ? data.rslt.obj.data("args") : null
 
 },
         function (r) {

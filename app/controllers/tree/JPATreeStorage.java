@@ -138,8 +138,8 @@ public class JPATreeStorage extends TreeStorage {
         String pathLike = oldPath + "%";
 
         // see http://opensource.atlassian.com/projects/hibernate/browse/HHH-2692
-//            Query query = JPA.em().createQuery("insert into TreeNode (name, typeName, opened, level, path, threadRoot, abstractNode) " +
-//                    "select c.name, c.typeName, c.opened, c.level + :delta, concat(:newPath, substring(path, :oldPathLength, length(path))), (select :newThreadRoot from AbstractNode), c.abstractNode " +
+//            Query query = JPA.em().createQuery("insert into TreeNode (name, type, opened, level, path, threadRoot, abstractNode) " +
+//                    "select c.name, c.type, c.opened, c.level + :delta, concat(:newPath, substring(path, :oldPathLength, length(path))), (select :newThreadRoot from AbstractNode), c.abstractNode " +
 //                    "from TreeNode c " +
 //                    "where c.threadRoot = :oldThreadRoot and c.path like :pathLike");
 //            query.setParameter("delta", delta);
@@ -149,8 +149,8 @@ public class JPATreeStorage extends TreeStorage {
 //            query.setParameter("oldThreadRoot", node.getThreadRoot());
 //            query.setParameter("pathLike", pathLike);
 
-        Query query = JPA.em().createNativeQuery("insert into TreeNode (name, typeName, opened, level, path, threadRoot_id, abstractNode_id) " +
-                "select c.name, c.typeName, c.opened, c.level + ?, concat(?, substring(path, ?, length(path))), ?, c.abstractNode_id " +
+        Query query = JPA.em().createNativeQuery("insert into TreeNode (name, type, opened, level, path, threadRoot_id, abstractNode_id) " +
+                "select c.name, c.type, c.opened, c.level + ?, concat(?, substring(path, ?, length(path))), ?, c.abstractNode_id " +
                 "from TreeNode c " +
                 "where c.threadRoot_id = ? and c.path like ?");
         query.setParameter(1, delta);
@@ -201,7 +201,7 @@ public class JPATreeStorage extends TreeStorage {
         if (copyObject) {
             // fetch all (type, (AbstractNode, TreeNode)) where TreeNode-s are the freshly copied nodes (they still point to the original AbstractNode)
             Map<String, Map<Long, Long>> nodeIdsByType = new HashMap<String, Map<Long, Long>>();
-            Query copied = JPA.em().createNativeQuery("select n.typeName, n.abstractNode_id, n.id from TreeNode n join TreeNode o where n.abstractNode_id = o.abstractNode_id and n.id <> o.id and n.path not like ?");
+            Query copied = JPA.em().createNativeQuery("select n.type, n.abstractNode_id, n.id from TreeNode n join TreeNode o where n.abstractNode_id = o.abstractNode_id and n.id <> o.id and n.path not like ?");
             copied.setParameter(1, pathLike);
             List<Object[]> ids = (List<Object[]>) copied.getResultList();
             for (Object[] p : ids) {

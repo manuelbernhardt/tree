@@ -86,11 +86,11 @@ public abstract class AbstractTree implements TreeDataHandler {
      */
     protected abstract NodeType getRootType();
 
-    public List<? extends JSTreeNode> getChildren(Long parentId, String[] args) {
+    public List<? extends JSTreeNode> getChildren(Long parentId, Map<String, String> args) {
         return storage.getChildren(parentId);
     }
 
-    public Long create(Long parentId, Long position, String name, String type, Long id) {
+    public Long create(Long parentId, Long position, String name, String type, Map<String, String> args) {
         NodeType nt = null;
         if (type == null) {
             nt = getRootType();

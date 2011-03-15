@@ -1,6 +1,7 @@
 package controllers.tree;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.gson.JsonObject;
 import models.tree.JSTreeNode;
@@ -14,13 +15,13 @@ import play.mvc.Util;
  */
 public class TreeController extends Controller {
 
-    public static void create(String treeId, Long parentId, Long position, String name, String type, Long id) {
-        createDirect(treeId, parentId, position, name, type, id);
+    public static void create(String treeId, Long parentId, Long position, String name, String type, Map<String, String> args) {
+        createDirect(treeId, parentId, position, name, type, args);
     }
 
     @Util
-    public static void createDirect(String treeId, Long parentId, Long position, String name, String type, Long id) {
-        Long node = Tree.getTree(treeId).create(parentId, position, name, type, id);
+    public static void createDirect(String treeId, Long parentId, Long position, String name, String type, Map<String, String> args) {
+        Long node = Tree.getTree(treeId).create(parentId, position, name, type, args);
         JsonObject status = null;
         if (node == null) {
             status = makeStatus(0, null);
@@ -79,12 +80,12 @@ public class TreeController extends Controller {
         renderJSON(makeStatus(1, null).toString());
     }
 
-    public static void getChildren(String treeId, Long id, String... args) {
+    public static void getChildren(String treeId, Long id, Map<String, String> args) {
         getChildrenDirect(treeId, id, args);
     }
 
     @Util
-    public static void getChildrenDirect(String treeId, Long id, String[] args) {
+    public static void getChildrenDirect(String treeId, Long id, Map<String, String> args) {
         List<? extends JSTreeNode> children = Tree.getTree(treeId).getChildren(id, args);
         renderJSON(Tree.getGson().toJson(children));
     }
