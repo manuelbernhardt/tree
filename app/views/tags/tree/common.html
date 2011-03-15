@@ -39,7 +39,9 @@ data.rslt.obj.each(function () {
       "treeId" : "${_id}",
       "id" : this.id.replace("node_", ""),
       "parentId": data.rslt.parent.attr ? data.rslt.parent.attr("id").replace("node_", "") : -1,
-      "type" : data.rslt.obj.attr("rel")
+      "type" : data.rslt.obj.attr("rel"),
+      "args" : data.rslt.obj.data("args") ? data.rslt.obj.data("args") : null
+
     },
     success : function (r) {
       if (!r.status) {
