@@ -53,36 +53,36 @@ public class JPATreeStorage extends TreeStorage {
     }
 
     @Override
-    public GenericTreeNode getTreeNode(Long id) {
-        JPABase node = TreeNode.findById(id);
+    public GenericTreeNode getTreeNode(Long id, String treeId) {
+        JPABase node = TreeNode.find(id, treeId);
         return (GenericTreeNode) node;
 
     }
 
     @Override
-    public void remove(Long id, boolean removeObject) {
-        TreeNode parent = TreeNode.findById(id);
+    public void remove(Long id, boolean removeObject, String treeId) {
+        TreeNode parent = TreeNode.find(id, treeId);
 
         String pathLike = parent.getPath() + "%";
-        List<Long> kids = queryList("select n.id from TreeNode n where n.path like ? and n.level > ? and n.threadRoot.id = ? order by n.path desc", Long.class, pathLike, parent.getLevel(), parent.getThreadRoot().getId());
+        List<Long> kids = queryList("select n.id from TreeNode n where n.treeId = ? and n.path like ? and n.level > ? and n.threadRoot.id = ? order by n.path desc", Long.class, treeId, pathLike, parent.getLevel(), parent.getThreadRoot().getId());
         if (!kids.isEmpty()) {
             if (removeObject) {
-                List<Object[]> nodes = queryList("select n.nodeId, n.type from TreeNode n where n.path like ? and n.level > ? and n.threadRoot.id = ? order by n.type desc", Object[].class, pathLike, parent.getLevel(), parent.getThreadRoot().getId());
+                List<Object[]> nodes = queryList("select n.nodeId, n.type from TreeNode n where n.treeId = ? and n.path like ? and n.level > ? and n.threadRoot.id = ? order by n.type desc", Object[].class, treeId, pathLike, parent.getLevel(), parent.getThreadRoot().getId());
                 Map<String, List<Long>> byType = toTypeMap(nodes);
                 for(String type : byType.keySet()) {
                     NodeType t = AbstractTree.getNodeType(type);
                     namedUpdateQuery("delete from " + t.getNodeClass().getSimpleName() + " n where n.id in (:nodes)", "nodes", byType.get(type));
                 }
             }
-            namedUpdateQuery("delete from TreeNode n where n.id in (:kids)", "kids", kids);
+            namedUpdateQuery("delete from TreeNode n where n.treeId = '" + treeId + "' and n.id in (:kids)", "kids", kids);
         }
 
         if (removeObject) {
             updateQuery("delete from " + parent.getNodeType().getNodeClass().getSimpleName() + " n where n.id = ?", parent.getNodeId());
         }
 
-        updateQuery("update TreeNode n set n.threadRoot = null where n.id = ?", id);
-        updateQuery("delete from TreeNode n where n.id = ?", id);
+        updateQuery("update TreeNode n set n.threadRoot = null where n.treeId = '" + treeId + "' and n.id = ?", id);
+        updateQuery("delete from TreeNode n where n.treeId = '" + treeId + "' and n.id = ?", id);
     }
 
     private Map<String, List<Long>> toTypeMap(List<Object[]> nodes) {
@@ -101,51 +101,51 @@ public class JPATreeStorage extends TreeStorage {
     }
 
     @Override
-    public List<JSTreeNode> getChildren(Long parentId) {
+    public List<JSTreeNode> getChildren(Long parentId, String treeId) {
         if (parentId == null || parentId == -1) {
-            return TreeNode.find("from TreeNode n where n.threadRoot = n").fetch();
+            return TreeNode.find("from TreeNode n where n.treeId = '" + treeId + "' and n.threadRoot = n").fetch();
         } else {
             TreeNode parent = TreeNode.findById(parentId);
-            return getChildren(parent.getLevel(), parent.getPath(), parent.getThreadRoot());
+            return getChildren(parent.getLevel(), parent.getPath(), parent.getThreadRoot(), treeId);
         }
     }
 
-    public static List<JSTreeNode> getChildren(Integer parentLevel, String parentPath, TreeNode parentThreadRoot) {
-        return TreeNode.find("from TreeNode n where n.level = ? and n.path like ? and n.threadRoot = ?", parentLevel + 1, parentPath + "%", parentThreadRoot).fetch();
+    public static List<JSTreeNode> getChildren(Integer parentLevel, String parentPath, TreeNode parentThreadRoot, String treeId) {
+        return TreeNode.find("from TreeNode n where n.treeId = '" + treeId + "' and n.level = ? and n.path like ? and n.threadRoot = ?", parentLevel + 1, parentPath + "%", parentThreadRoot).fetch();
     }
 
     @Override
-    public void rename(Long id, String name) {
-        TreeNode n = TreeNode.findById(id);
+    public void rename(Long id, String name, String treeId) {
+        TreeNode n = TreeNode.find(id, treeId);
         n.setName(name);
         n.save();
         updateQuery("update " + n.getNodeType().getNodeClass().getSimpleName() + " n set n.name = ? where n.id = ?", name, n.getNodeId());
     }
 
     @Override
-    public void move(Long id, Long target) {
-        TreeNode node = TreeNode.findById(id);
+    public void move(Long id, Long target, String treeId) {
+        TreeNode node = TreeNode.find(id, treeId);
         TreeNode oldParent = (TreeNode) node.getParent();
-        TreeNode parent = TreeNode.findById(target);
+        TreeNode parent = TreeNode.find(target, treeId);
 
         String newPath = parent.getPath();
         Integer delta = parent.getLevel() - node.getLevel() + 1;
 
         if (node.getThreadRoot().getId().equals(node.getId())) {
-            updateQuery("update TreeNode set path = concat(?, path), level = level + ? where threadRoot = ?", newPath + "____", delta, parent.getThreadRoot());
+            updateQuery("update TreeNode set path = concat(?, path), level = level + ? where n.treeId = '" + treeId + "' and threadRoot = ?", newPath + "____", delta, parent.getThreadRoot());
         } else {
             String oldPath = node.getPath();
             Integer oldPathLength = oldParent.getPath().length();
             String pathLike = oldPath + "%";
-            updateQuery("update TreeNode set path = concat(?, substring(path, ?, length(path))), level = level + ? where threadRoot = ? and path like ?", newPath, oldPathLength + 1, delta, parent.getThreadRoot(), pathLike);
+            updateQuery("update TreeNode set path = concat(?, substring(path, ?, length(path))), level = level + ? where n.treeId = '" + treeId + "' and threadRoot = ? and path like ?", newPath, oldPathLength + 1, delta, parent.getThreadRoot(), pathLike);
         }
     }
 
 
     @Override
-    public void copy(Long id, Long target, boolean copyObject, NodeType[] types) {
-        TreeNode node = TreeNode.findById(id);
-        TreeNode parent = TreeNode.findById(target);
+    public void copy(Long id, Long target, boolean copyObject, NodeType[] types, String treeId) {
+        TreeNode node = TreeNode.find(id, treeId);
+        TreeNode parent = TreeNode.find(target, treeId );
         Integer delta = parent.getLevel() - node.getLevel() + 1;
         String oldPath = node.getPath();
         String newPath = parent.getThreadRoot().getId().equals(parent.getId()) ? parent.getPath() + "___" : parent.getPath(); // FIXME "___"
@@ -173,13 +173,14 @@ public class JPATreeStorage extends TreeStorage {
         Query query = JPA.em().createNativeQuery("insert into TreeNode (name, type, opened, level, path, threadRoot_id, abstractNode_id) " +
                 "select c.name, c.type, c.opened, c.level + ?, concat(?, substring(path, ?, length(path))), ?, c.abstractNode_id " +
                 "from TreeNode c " +
-                "where c.threadRoot_id = ? and c.path like ?");
+                "where c.threadRoot_id = ? and c.path like ? and c.treeId = ?");
         query.setParameter(1, delta);
         query.setParameter(2, newPath);
         query.setParameter(3, oldPathLength + 1);
         query.setParameter(4, parent.getThreadRoot().getId());
         query.setParameter(5, node.getThreadRoot().getId());
         query.setParameter(6, pathLike);
+        query.setParameter(7, treeId);
 
         query.executeUpdate();
 
@@ -213,10 +214,11 @@ public class JPATreeStorage extends TreeStorage {
         */
 
         // now, update the paths that are for the moment incorrect
-        Query pathQuery = JPA.em().createNativeQuery("update TreeNode set path = concat(substring(path, ?, length(path) - ? - locate('___', reverse(path)) + 1), id) where path like ?");
+        Query pathQuery = JPA.em().createNativeQuery("update TreeNode set path = concat(substring(path, ?, length(path) - ? - locate('___', reverse(path)) + 1), id) where path like ? and treeId = ?");
         pathQuery.setParameter(1, copyTransactionId.length() + 1);
         pathQuery.setParameter(2, copyTransactionId.length());
         pathQuery.setParameter(3, copyTransactionId + "%");
+        pathQuery.setParameter(4, treeId);
         pathQuery.executeUpdate();
 
         if (copyObject) {

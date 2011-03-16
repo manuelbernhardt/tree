@@ -120,11 +120,11 @@ public abstract class AbstractTree implements TreeDataHandler {
     }
 
     public GenericTreeNode getNode(Long id) {
-        return storage.getTreeNode(id);
+        return storage.getTreeNode(id, getName());
     }
 
     public List<? extends JSTreeNode> getChildren(Long parentId, Map<String, String> args) {
-        return storage.getChildren(parentId);
+        return storage.getChildren(parentId, getName());
     }
 
     public Long create(Long parentId, Long position, String name, String type, Map<String, String> args) {
@@ -154,7 +154,7 @@ public abstract class AbstractTree implements TreeDataHandler {
             node.setNodeId(object.getId());
 
             // compute only when we have an ID
-            node.setPath(storage.computePath(storage.getTreeNode(parentId), node.getId()));
+            node.setPath(storage.computePath(storage.getTreeNode(parentId, getName()), node.getId()));
             node = storage.updateTreeNode(node);
 
             return node.getId();
@@ -166,21 +166,21 @@ public abstract class AbstractTree implements TreeDataHandler {
 
     public boolean rename(Long id, String name, String type) {
         // TODO return false if error
-        storage.rename(id, name);
+        storage.rename(id, name, getName());
         return true;
     }
 
     public void copy(Long id, Long target, Long position) {
-        storage.copy(id, target, true, getNodes());
+        storage.copy(id, target, true, getNodes(), getName());
     }
 
     public void move(Long id, Long target, Long position) {
-        storage.move(id, target);
+        storage.move(id, target, getName());
     }
 
     public boolean remove(Long id, Long parentId, String type, Map<String, String> args) {
         // TODO return false if error
-        storage.remove(id, isRemovalPropagated());
+        storage.remove(id, isRemovalPropagated(), getName());
         return true;
     }
 

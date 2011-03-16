@@ -25,18 +25,18 @@ public abstract class TreeStorage {
 
     public abstract GenericTreeNode updateTreeNode(GenericTreeNode node);
 
-    public abstract GenericTreeNode getTreeNode(Long id);
+    public abstract GenericTreeNode getTreeNode(Long id, String treeId);
 
-    public abstract List<JSTreeNode> getChildren(Long parentId);
+    public abstract List<JSTreeNode> getChildren(Long parentId, String treeId);
 
 
-    public abstract void remove(Long id, boolean removeObject);
+    public abstract void remove(Long id, boolean removeObject, String treeId);
 
-    public abstract void rename(Long id, String name);
+    public abstract void rename(Long id, String name, String treeId);
 
-    public abstract void move(Long id, Long target);
+    public abstract void move(Long id, Long target, String treeId);
 
-    public abstract void copy(Long id, Long target, boolean copyObject, NodeType[] objectTypes);
+    public abstract void copy(Long id, Long target, boolean copyObject, NodeType[] objectTypes, String treeId);
 
     /**
      * Compues the path of a TreeNode. The rules for creating the path need to be the same everywhere.

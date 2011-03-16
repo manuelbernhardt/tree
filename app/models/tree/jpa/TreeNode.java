@@ -80,7 +80,7 @@ public class TreeNode extends Model implements GenericTreeNode {
     }
 
     public List<JSTreeNode> getChildren() {
-        return JPATreeStorage.getChildren(level, path, threadRoot);
+        return JPATreeStorage.getChildren(level, path, threadRoot, treeId);
     }
 
     public boolean isOpen() {
@@ -133,5 +133,13 @@ public class TreeNode extends Model implements GenericTreeNode {
     @PostLoad
     public void doLoad() {
         this.nodeType = AbstractTree.getNodeType(this.type);
+    }
+
+    public static TreeNode find(Long id, String treeId) {
+        return TreeNode.find("from TreeNode n where id = ? and treeId = ?", id, treeId).first();
+    }
+
+    public static TreeNode findById(Long id) {
+        throw new RuntimeException("Use find(id, treeId)");
     }
 }
