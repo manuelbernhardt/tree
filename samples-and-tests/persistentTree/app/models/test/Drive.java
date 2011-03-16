@@ -1,4 +1,4 @@
-package models.tree.test;
+package models.test;
 
 import javax.persistence.Entity;
 

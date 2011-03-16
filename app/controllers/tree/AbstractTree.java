@@ -28,7 +28,7 @@ public abstract class AbstractTree implements TreeDataHandler {
      * @return a registered {@link NodeType}
      */
     public static NodeType type(Class<? extends Node> nodeClass, boolean isContainer) {
-        String name = nodeClass.getSimpleName().toLowerCase();
+        String name = nodeClass.getSimpleName().substring(0, 1).toLowerCase() + nodeClass.getSimpleName().substring(1);
         NodeType nodeType = new NodeType(name, isContainer, nodeClass);
         nodeTypes.put(name, nodeType);
         nodeTypesByClass.put(nodeClass, nodeType);
@@ -49,7 +49,7 @@ public abstract class AbstractTree implements TreeDataHandler {
         return StorageType.JPA;
     }
 
-    protected void init() {
+    void init() {
         if (getStorageType() == StorageType.JPA) {
             storage = new JPATreeStorage();
         } else {
@@ -71,7 +71,7 @@ public abstract class AbstractTree implements TreeDataHandler {
     public abstract String getName();
 
     /**
-     * Retuns all the possible node types for this tree.<br>
+     * Returns all the possible node types for this tree.<br>
      * Register a type with {@link #type(Class, boolean)}
      *
      * @return an Array of {@link NodeType}
@@ -79,12 +79,49 @@ public abstract class AbstractTree implements TreeDataHandler {
     protected abstract NodeType[] getNodes();
 
     /**
+     * The default type of nodes (returned by jsTree when a default node is created)
+     * @return the {@link NodeType} of the default node to create
+     */
+    protected abstract NodeType getDefaultType();
+
+    /**
      * The type of the parent of all nodes in the tree, i.e. which type is at the root of the tree.
      * For the moment we don't support mixed root nodes
      *
-     * @return the Class of the root type
+     * @return the {@link NodeType} of the root type
      */
     protected abstract NodeType getRootType();
+
+    /**
+     * Whether or not deletion of a node in the tree leads to the deletion of the attached object
+     *
+     * @return <code>true</code> by default
+     */
+    protected boolean isRemovalPropagated() {
+        return true;
+    }
+
+    /**
+     * Whether a freshly created node is open by default
+     *
+     * @return <code>true</code> by default
+     */
+    protected boolean isCreatedNodeOpen() {
+        return true;
+    }
+
+    /**
+     * Whether or not copying a node or branch leads to the creation of copies of the attached object
+     *
+     * @return <code>true</code> by default
+     */
+    protected boolean isObjectCopyPropagated() {
+        return true;
+    }
+
+    public GenericTreeNode getNode(Long id) {
+        return storage.getTreeNode(id);
+    }
 
     public List<? extends JSTreeNode> getChildren(Long parentId, Map<String, String> args) {
         return storage.getChildren(parentId);
@@ -94,23 +131,31 @@ public abstract class AbstractTree implements TreeDataHandler {
         NodeType nt = null;
         if (type == null) {
             nt = getRootType();
+        } else if(type.equals("default")) {
+            nt = getDefaultType();
         } else {
             nt = getNodeType(type);
         }
+        if (nt == null) {
+            throw new RuntimeException("Could not find a registered NodeType for type '" + type + "'");
+        }
 
         try {
-            GenericTreeNode node = storage.getNewGenericTreeNode();
+            GenericTreeNode node = storage.getNewTreeNode();
             populateTreeNode(node, parentId, name, nt);
-            node = storage.create(node);
+            node = storage.createTreeNode(node);
 
-            Node object = createObjectNode(name, nt);
-            object = storage.create(object);
+            Node object = createObjectNode(name, nt, args);
+            if(object == null) {
+                throw new RuntimeException(String.format("New instance for node '%s' of type '%s' is null", name, nt.getName()));
+            }
+            object = storage.createObject(object);
 
-            node.setNode(object);
+            node.setNodeId(object.getId());
 
             // compute only when we have an ID
-            node.setPath(storage.computePath(storage.getTreeNode(parentId), node.getId(), node.getName()));
-            node = storage.update(node);
+            node.setPath(storage.computePath(storage.getTreeNode(parentId), node.getId()));
+            node = storage.updateTreeNode(node);
 
             return node.getId();
         } catch (Exception e) {
@@ -120,7 +165,7 @@ public abstract class AbstractTree implements TreeDataHandler {
     }
 
     public boolean rename(Long id, String name, String type) {
-        // FIXME return false if error
+        // TODO return false if error
         storage.rename(id, name);
         return true;
     }
@@ -134,19 +179,38 @@ public abstract class AbstractTree implements TreeDataHandler {
     }
 
     public boolean remove(Long id, Long parentId, String type, Map<String, String> args) {
-        // TODO make configurable
-        // FIXME return false if error
-        storage.remove(id, true);
+        // TODO return false if error
+        storage.remove(id, isRemovalPropagated());
         return true;
     }
 
 
-    private Node createObjectNode(String name, NodeType type) throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
-        Constructor c = type.getNodeClass().getDeclaredConstructor();
-        Node object = (Node) c.newInstance();
-        object.setName(name);
-        return object;
+    /**
+     * Creates a new instance of a {@link Node}. By default, this method uses reflection. Override it you need to do more complicated things.
+     *
+     * @param name the name of the node to create
+     * @param type the {@link NodeType} of the node to create
+     * @param args a map of arguments provided via the interface
+     * @return a new instance of a {@link Node}
+     */
+    protected Node createObjectNode(String name, NodeType type, Map<String, String> args) {
+        try {
+            Constructor c = type.getNodeClass().getDeclaredConstructor();
+            Node object = (Node) c.newInstance();
+            object.setName(name);
+            return object;
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
+
 
     private void populateTreeNode(GenericTreeNode n, Long parentId, String name, NodeType type) {
         GenericTreeNode parent = getNode(parentId);
@@ -164,11 +228,6 @@ public abstract class AbstractTree implements TreeDataHandler {
         n.setName(name);
         n.setNodeType(type);
 
-        // TODO configurable
-        n.setOpen(false);
-    }
-
-    public GenericTreeNode getNode(Long id) {
-        return storage.getTreeNode(id);
+        n.setOpen(isCreatedNodeOpen());
     }
 }

@@ -1,4 +1,4 @@
-package models.tree.test;
+package models.test;
 
 import controllers.tree.AbstractTree;
 import controllers.tree.NodeType;
@@ -16,6 +16,11 @@ public class TestTree extends AbstractTree {
     @Override
     protected NodeType[] getNodes() {
         return new NodeType[]{type(Drive.class, true), type(Folder.class, true)};
+    }
+
+    @Override
+    protected NodeType getDefaultType() {
+        return getNodeType(Folder.class);
     }
 
     @Override

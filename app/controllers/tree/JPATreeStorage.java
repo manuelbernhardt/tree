@@ -1,6 +1,7 @@
 package controllers.tree;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,30 +25,30 @@ import play.db.jpa.Model;
 public class JPATreeStorage extends TreeStorage {
 
     @Override
-    public GenericTreeNode getNewGenericTreeNode() {
+    public GenericTreeNode getNewTreeNode() {
         return new TreeNode();
     }
 
     @Override
-    public GenericTreeNode create(GenericTreeNode node) {
+    public GenericTreeNode createTreeNode(GenericTreeNode node) {
         TreeNode treeNode = (TreeNode) node;
         treeNode.create();
         return node;
     }
 
     @Override
-    public Node create(Node concrete) {
+    public Node createObject(Node concrete) {
         ((Model) concrete).create();
         return concrete;
     }
 
     @Override
-    public Node update(Node node) {
+    public Node updateObject(Node node) {
         return (Node) ((Model) node).save();
     }
 
     @Override
-    public GenericTreeNode update(GenericTreeNode node) {
+    public GenericTreeNode updateTreeNode(GenericTreeNode node) {
         return (GenericTreeNode) ((Model) node).save();
     }
 
@@ -65,20 +66,38 @@ public class JPATreeStorage extends TreeStorage {
         String pathLike = parent.getPath() + "%";
         List<Long> kids = queryList("select n.id from TreeNode n where n.path like ? and n.level > ? and n.threadRoot.id = ? order by n.path desc", Long.class, pathLike, parent.getLevel(), parent.getThreadRoot().getId());
         if (!kids.isEmpty()) {
-            List<Long> nodes = queryList("select n.abstractNode.id from TreeNode n where n.path like ? and n.level > ? and n.threadRoot.id = ? order by n.path desc", Long.class, pathLike, parent.getLevel(), parent.getThreadRoot().getId());
             if (removeObject) {
-                namedUpdateQuery("update TreeNode n set n.abstractNode = null where n.id in (:kids)", "kids", kids);
-                namedUpdateQuery("delete from AbstractNode a where a.id in (:nodes)", "nodes", nodes);
+                List<Object[]> nodes = queryList("select n.nodeId, n.type from TreeNode n where n.path like ? and n.level > ? and n.threadRoot.id = ? order by n.type desc", Object[].class, pathLike, parent.getLevel(), parent.getThreadRoot().getId());
+                Map<String, List<Long>> byType = toTypeMap(nodes);
+                for(String type : byType.keySet()) {
+                    NodeType t = AbstractTree.getNodeType(type);
+                    namedUpdateQuery("delete from " + t.getNodeClass().getSimpleName() + " n where n.id in (:nodes)", "nodes", byType.get(type));
+                }
             }
             namedUpdateQuery("delete from TreeNode n where n.id in (:kids)", "kids", kids);
         }
 
-        updateQuery("update TreeNode n set n.abstractNode = null, n.threadRoot = null where n.id = ?", id);
-
         if (removeObject) {
-            updateQuery("delete from AbstractNode a where a.id = ?", parent.abstractNode.getId());
+            updateQuery("delete from " + parent.getNodeType().getNodeClass().getSimpleName() + " n where n.id = ?", parent.getNodeId());
         }
+
+        updateQuery("update TreeNode n set n.threadRoot = null where n.id = ?", id);
         updateQuery("delete from TreeNode n where n.id = ?", id);
+    }
+
+    private Map<String, List<Long>> toTypeMap(List<Object[]> nodes) {
+        Map<String, List<Long>> nodesByType = new HashMap<String, List<Long>>();
+        for(Object[] pair : nodes) {
+            Long nid = (Long) pair[0];
+            String type = (String) pair[1];
+            List<Long> ids = nodesByType.get(type);
+            if(ids == null) {
+                ids = new ArrayList<Long>();
+                nodesByType.put(type, ids);
+            }
+            ids.add(nid);
+        }
+        return nodesByType;
     }
 
     @Override
@@ -97,8 +116,10 @@ public class JPATreeStorage extends TreeStorage {
 
     @Override
     public void rename(Long id, String name) {
-        updateQuery("update TreeNode n set n.name = ? where n.id = ?", name, id);
-        updateQuery("update AbstractNode a set a.name = ? where a.id = (select n.abstractNode.id from TreeNode n where n.id = ?)", name, id);
+        TreeNode n = TreeNode.findById(id);
+        n.setName(name);
+        n.save();
+        updateQuery("update " + n.getNodeType().getNodeClass().getSimpleName() + " n set n.name = ? where n.id = ?", name, n.getNodeId());
     }
 
     @Override
@@ -285,29 +306,5 @@ public class JPATreeStorage extends TreeStorage {
         Query q = JPA.em().createQuery(query);
         q.setParameter(argName, arg);
         q.executeUpdate();
-    }
-
-    private static class CopyId {
-        private final Long id;
-        private final Long abstractNodeId;
-        private final String type;
-
-        private CopyId(Long id, Long abstractNodeId, String type) {
-            this.id = id;
-            this.abstractNodeId = abstractNodeId;
-            this.type = type;
-        }
-
-        public Long getId() {
-            return id;
-        }
-
-        public Long getAbstractNodeId() {
-            return abstractNodeId;
-        }
-
-        public String getType() {
-            return type;
-        }
     }
 }

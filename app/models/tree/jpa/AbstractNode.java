@@ -1,19 +1,16 @@
 package models.tree.jpa;
 
-import javax.persistence.Entity;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
+import javax.persistence.MappedSuperclass;
 
 import models.tree.Node;
 import play.db.jpa.Model;
 
 /**
- * Extend this template class if you don't want to re-implement the Node interface and are fine with a joined inheritance strategy
+ * Template class for a {@link Node}
  *
  * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>
  */
-@Entity
-@Inheritance(strategy = InheritanceType.JOINED)
+@MappedSuperclass
 public class AbstractNode extends Model implements Node {
 
     public String name;

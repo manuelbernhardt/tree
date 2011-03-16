@@ -3,7 +3,7 @@ package models.tree;
 import java.util.List;
 
 /**
- * Representation of a JSTree node.
+ * Representation of a jsTree node.
  *
  * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>
  */

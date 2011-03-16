@@ -6,7 +6,6 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
 import javax.persistence.PostLoad;
 import javax.persistence.PrePersist;
 
@@ -15,7 +14,6 @@ import controllers.tree.JPATreeStorage;
 import controllers.tree.NodeType;
 import models.tree.GenericTreeNode;
 import models.tree.JSTreeNode;
-import models.tree.Node;
 import play.db.jpa.Model;
 
 /**
@@ -32,6 +30,7 @@ public class TreeNode extends Model implements GenericTreeNode {
     public String type;
     public boolean opened;
     public int level;
+    public Long nodeId;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     public TreeNode threadRoot;
@@ -39,9 +38,6 @@ public class TreeNode extends Model implements GenericTreeNode {
     // let's assume nobody creates such mad hierarchies
     @Column(length = 5000)
     public String path;
-
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    public AbstractNode abstractNode;
 
     public String getTreeId() {
         return treeId;
@@ -59,12 +55,12 @@ public class TreeNode extends Model implements GenericTreeNode {
         this.name = name;
     }
 
-    public Node getNode() {
-        return abstractNode;
+    public Long getNodeId() {
+        return this.nodeId;
     }
 
-    public void setNode(Node n) {
-        this.abstractNode = (AbstractNode) n;
+    public void setNodeId(Long id) {
+        this.nodeId = id;
     }
 
     public NodeType getNodeType() {
@@ -76,7 +72,7 @@ public class TreeNode extends Model implements GenericTreeNode {
     }
 
     public GenericTreeNode getParent() {
-        if (this.threadRoot.getId() == this.getId()) {
+        if (this.threadRoot.getId().equals(this.getId())) {
             return this;
         } else {
             return find("from TreeNode n where level = ? and ? like concat(path, '%')", level - 1, path).first();

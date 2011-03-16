@@ -13,19 +13,22 @@ import models.tree.Node;
  */
 public abstract class TreeStorage {
 
-    public abstract Node create(Node node);
 
-    public abstract Node update(Node node);
+    public abstract Node createObject(Node node);
 
-    public abstract GenericTreeNode getNewGenericTreeNode();
+    public abstract Node updateObject(Node node);
 
-    public abstract GenericTreeNode create(GenericTreeNode node);
 
-    public abstract GenericTreeNode update(GenericTreeNode node);
+    public abstract GenericTreeNode getNewTreeNode();
+
+    public abstract GenericTreeNode createTreeNode(GenericTreeNode node);
+
+    public abstract GenericTreeNode updateTreeNode(GenericTreeNode node);
 
     public abstract GenericTreeNode getTreeNode(Long id);
 
     public abstract List<JSTreeNode> getChildren(Long parentId);
+
 
     public abstract void remove(Long id, boolean removeObject);
 
@@ -36,9 +39,13 @@ public abstract class TreeStorage {
     public abstract void copy(Long id, Long target, boolean copyObject, NodeType[] objectTypes);
 
     /**
-     * the rules for creating the path should be the same as in the TreeStorage *
+     * Compues the path of a TreeNode. The rules for creating the path need to be the same everywhere.
+     *
+     * @param parent the parent of the node
+     * @param id     the id of the node
+     * @return a path composed of the concatenation of parent path and id
      */
-    public String computePath(GenericTreeNode parent, Long id, String name) {
+    public String computePath(GenericTreeNode parent, Long id) {
         String path = "";
 
         // if it's not a null parent and if it's not a thread root
