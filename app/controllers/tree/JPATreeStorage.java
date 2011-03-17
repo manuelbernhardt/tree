@@ -105,7 +105,7 @@ public class JPATreeStorage extends TreeStorage {
         if (parentId == null || parentId == -1) {
             return TreeNode.find("from TreeNode n where n.treeId = '" + treeId + "' and n.threadRoot = n").fetch();
         } else {
-            TreeNode parent = TreeNode.findById(parentId);
+            TreeNode parent = TreeNode.find(parentId, treeId);
             return getChildren(parent.getLevel(), parent.getPath(), parent.getThreadRoot(), treeId);
         }
     }
