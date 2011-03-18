@@ -146,10 +146,13 @@ public class TreeNode extends Model implements GenericTreeNode {
 
     public static void rename(Node object, String name) {
         NodeType type = AbstractTree.getNodeType(object.getClass());
-        List<TreeNode> treeNodes = TreeNode.find("from TreeNode n where n.type = ? and n.nodeId = ?", type.getName(), object.getId()).fetch();
-        for(TreeNode n : treeNodes) {
-            n.name = name;
-            n.save();
+        // may happen before the tree is initialized.
+        if(type != null) {
+            List<TreeNode> treeNodes = TreeNode.find("from TreeNode n where n.type = ? and n.nodeId = ?", type.getName(), object.getId()).fetch();
+            for(TreeNode n : treeNodes) {
+                n.name = name;
+                n.save();
+            }
         }
     }
 
