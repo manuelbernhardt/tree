@@ -14,6 +14,7 @@ import controllers.tree.JPATreeStorage;
 import controllers.tree.NodeType;
 import models.tree.GenericTreeNode;
 import models.tree.JSTreeNode;
+import models.tree.Node;
 import play.db.jpa.Model;
 
 /**
@@ -142,4 +143,14 @@ public class TreeNode extends Model implements GenericTreeNode {
     public static TreeNode findById(Long id) {
         throw new RuntimeException("Use find(id, treeId)");
     }
+
+    public static void rename(Node object, String name) {
+        NodeType type = AbstractTree.getNodeType(object.getClass());
+        List<TreeNode> treeNodes = TreeNode.find("from TreeNode n where n.type = ? and n.nodeId = ?", type.getName(), object.getId()).fetch();
+        for(TreeNode n : treeNodes) {
+            n.name = name;
+            n.save();
+        }
+    }
+
 }

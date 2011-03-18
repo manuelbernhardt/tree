@@ -9,6 +9,7 @@ import java.util.Map;
 import models.tree.GenericTreeNode;
 import models.tree.JSTreeNode;
 import models.tree.Node;
+import models.tree.jpa.TreeNode;
 
 /**
  * Base class for persistent trees. It is meant to offer support for more than one storage engine (for now, only JPA is supported).
@@ -35,11 +36,16 @@ public abstract class AbstractTree implements TreeDataHandler {
         return nodeType;
     }
 
+    public static void rename(Node node, String name) {
+        // TODO abstract this so it fits again with the generic storage
+        TreeNode.rename(node, name);
+    }
+
     public static NodeType getNodeType(String name) {
         return nodeTypes.get(name);
     }
 
-    protected static NodeType getNodeType(Class type) {
+    public static NodeType getNodeType(Class type) {
         return nodeTypesByClass.get(type);
     }
 
