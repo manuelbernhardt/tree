@@ -45,7 +45,7 @@ public class JSTreeNodeSerializer implements JsonSerializer<JSTreeNode> {
     private void populateBasicProperties(JSTreeNode node, JsonSerializationContext context, JsonObject o) {
         o.addProperty("data", node.getName());
         Map<String, Object> attributes = new HashMap<String, Object>();
-        attributes.put("id", node.getId());
+        attributes.put("id", "node_" + node.getId());
         attributes.put("rel", node.getType());
         o.add("attr", context.serialize(attributes));
         if (node.isContainer()) {
