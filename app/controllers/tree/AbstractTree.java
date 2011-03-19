@@ -70,11 +70,15 @@ public abstract class AbstractTree implements TreeDataHandler {
     private TreeStorage storage = null;
 
     /**
-     * The qualifier for this tree
+     * The qualifier for this tree. By default, it is the classname starting with a lowercase.
+     * By convention, the classname should end with "Tree".
      *
      * @return a qualifier for the tree, unique for all the application.
      */
-    public abstract String getName();
+    public String getName() {
+        String className = this.getClass().getSimpleName();
+        return className.substring(0, 1).toLowerCase() + className.substring(1);
+    }
 
     /**
      * Returns all the possible node types for this tree.<br>
@@ -86,6 +90,7 @@ public abstract class AbstractTree implements TreeDataHandler {
 
     /**
      * The default type of nodes (returned by jsTree when a default node is created)
+     *
      * @return the {@link NodeType} of the default node to create
      */
     protected abstract NodeType getDefaultType();
@@ -137,7 +142,7 @@ public abstract class AbstractTree implements TreeDataHandler {
         NodeType nt = null;
         if (type == null) {
             nt = getRootType();
-        } else if(type.equals("default")) {
+        } else if (type.equals("default")) {
             nt = getDefaultType();
         } else {
             nt = getNodeType(type);
@@ -152,7 +157,7 @@ public abstract class AbstractTree implements TreeDataHandler {
             node = storage.createTreeNode(node);
 
             Node object = createObjectNode(name, nt, args);
-            if(object == null) {
+            if (object == null) {
                 throw new RuntimeException(String.format("New instance for node '%s' of type '%s' is null", name, nt.getName()));
             }
             object = storage.createObject(object);

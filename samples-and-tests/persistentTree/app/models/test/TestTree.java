@@ -9,11 +9,6 @@ import controllers.tree.NodeType;
 public class TestTree extends AbstractTree {
 
     @Override
-    public String getName() {
-        return "testTree";
-    }
-
-    @Override
     protected NodeType[] getNodes() {
         return new NodeType[]{type(Drive.class, true), type(Folder.class, true)};
     }
