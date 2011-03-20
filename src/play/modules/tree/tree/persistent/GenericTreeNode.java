@@ -1,9 +1,9 @@
-package models.tree;
+package tree.persistent;
 
-import controllers.tree.NodeType;
+import tree.JSTreeNode;
 
 /**
- * A generic node in a persistent tree. Implementations of this interface need to also have an equivalent {@link controllers.tree.TreeStorage} implementation
+ * A generic node in a persistent tree. Implementations of this interface need to also have an equivalent {@link TreeStorage} implementation
  *
  * TODO documentation
  *

@@ -1,10 +1,8 @@
-package controllers.tree;
+package tree.persistent;
 
 import java.util.List;
 
-import models.tree.GenericTreeNode;
-import models.tree.JSTreeNode;
-import models.tree.Node;
+import tree.JSTreeNode;
 
 /**
  * Abstract storage for trees, allowing the use of more storage engines in order to store trees.
@@ -18,7 +16,6 @@ public abstract class TreeStorage {
 
     public abstract Node updateObject(Node node);
 
-
     public abstract GenericTreeNode getNewTreeNode();
 
     public abstract GenericTreeNode createTreeNode(GenericTreeNode node);
@@ -28,7 +25,6 @@ public abstract class TreeStorage {
     public abstract GenericTreeNode getTreeNode(Long id, String treeId);
 
     public abstract List<JSTreeNode> getChildren(Long parentId, String treeId);
-
 
     public abstract void remove(Long id, boolean removeObject, String treeId);
 

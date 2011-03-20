@@ -1,8 +1,9 @@
-package controllers.tree;
+package tree.simple;
 
 import java.util.List;
 
-import models.tree.JSTreeNode;
+import tree.JSTreeNode;
+import tree.simple.ChildProducer;
 
 /**
  * In-memory implementation of a JSTreeNode, for use with simple trees.

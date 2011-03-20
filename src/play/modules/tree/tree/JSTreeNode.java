@@ -1,4 +1,4 @@
-package models.tree;
+package tree;
 
 import java.util.List;
 

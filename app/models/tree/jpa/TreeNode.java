@@ -9,12 +9,12 @@ import javax.persistence.ManyToOne;
 import javax.persistence.PostLoad;
 import javax.persistence.PrePersist;
 
-import controllers.tree.AbstractTree;
 import controllers.tree.JPATreeStorage;
-import controllers.tree.NodeType;
-import models.tree.GenericTreeNode;
-import models.tree.JSTreeNode;
-import models.tree.Node;
+import tree.persistent.AbstractTree;
+import tree.persistent.GenericTreeNode;
+import tree.JSTreeNode;
+import tree.persistent.NodeType;
+import tree.persistent.Node;
 import play.db.jpa.Model;
 
 /**
@@ -145,6 +145,9 @@ public class TreeNode extends Model implements GenericTreeNode {
     }
 
     public static void rename(Node object, String name) {
+        if(name == null) {
+            return;
+        }
         NodeType type = AbstractTree.getNodeType(object.getClass());
         // may happen before the tree is initialized.
         if(type != null) {

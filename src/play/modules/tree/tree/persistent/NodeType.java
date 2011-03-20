@@ -1,6 +1,4 @@
-package controllers.tree;
-
-import models.tree.Node;
+package tree.persistent;
 
 /**
  * Type of a node, to be used when implementing an {@link AbstractTree}

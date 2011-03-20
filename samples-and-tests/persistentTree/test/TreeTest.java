@@ -1,12 +1,12 @@
 import java.util.List;
 
-import controllers.tree.AbstractTree;
-import controllers.tree.NodeType;
-import controllers.tree.Tree;
+import tree.persistent.AbstractTree;
+import tree.JSTreeNode;
+import tree.persistent.NodeType;
+import tree.Tree;
 import models.test.Folder;
 import models.test.TestTree;
-import models.tree.GenericTreeNode;
-import models.tree.JSTreeNode;
+import tree.persistent.GenericTreeNode;
 import models.tree.jpa.TreeNode;
 import org.junit.After;
 import org.junit.Before;

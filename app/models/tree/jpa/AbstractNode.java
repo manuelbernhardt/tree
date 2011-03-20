@@ -2,7 +2,8 @@ package models.tree.jpa;
 
 import javax.persistence.MappedSuperclass;
 
-import models.tree.Node;
+import tree.persistent.Node;
+import tree.persistent.NodeName;
 import play.db.jpa.Model;
 
 /**
@@ -13,14 +14,11 @@ import play.db.jpa.Model;
 @MappedSuperclass
 public class AbstractNode extends Model implements Node {
 
+    @NodeName
     public String name;
 
     public String getName() {
         return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     @Override

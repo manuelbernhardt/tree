@@ -1,8 +1,8 @@
-package controllers.tree;
+package tree.simple;
 
 import java.util.List;
 
-import models.tree.JSTreeNode;
+import tree.JSTreeNode;
 
 /**
  * Producer for children of tree nodes

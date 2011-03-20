@@ -1,7 +1,7 @@
 package models.test;
 
-import controllers.tree.AbstractTree;
-import controllers.tree.NodeType;
+import tree.persistent.AbstractTree;
+import tree.persistent.NodeType;
 
 /**
  * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>

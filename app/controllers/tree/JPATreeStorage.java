@@ -7,14 +7,17 @@ import java.util.List;
 import java.util.Map;
 import javax.persistence.Query;
 
-import models.tree.GenericTreeNode;
-import models.tree.JSTreeNode;
-import models.tree.Node;
 import models.tree.jpa.AbstractNode;
 import models.tree.jpa.TreeNode;
 import play.db.jpa.JPA;
 import play.db.jpa.JPABase;
 import play.db.jpa.Model;
+import tree.JSTreeNode;
+import tree.persistent.AbstractTree;
+import tree.persistent.GenericTreeNode;
+import tree.persistent.Node;
+import tree.persistent.NodeType;
+import tree.persistent.TreeStorage;
 
 /**
  * JPA implementation of the TreeStorage
@@ -23,6 +26,10 @@ import play.db.jpa.Model;
  * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>
  */
 public class JPATreeStorage extends TreeStorage {
+
+    public JPATreeStorage() {
+        
+    }
 
     @Override
     public GenericTreeNode getNewTreeNode() {
@@ -56,8 +63,9 @@ public class JPATreeStorage extends TreeStorage {
     public GenericTreeNode getTreeNode(Long id, String treeId) {
         JPABase node = TreeNode.find(id, treeId);
         return (GenericTreeNode) node;
-
     }
+
+
 
     @Override
     public void remove(Long id, boolean removeObject, String treeId) {
@@ -119,6 +127,11 @@ public class JPATreeStorage extends TreeStorage {
         TreeNode n = TreeNode.find(id, treeId);
         n.setName(name);
         n.save();
+
+        // TODO this assumes there is a "name" field, whereas:
+        // 1) it may be named differently
+        // 1) there may be more than one (though unlikely)
+        // use the @tree.persistent.NodeName annotation to figure out the fields (this needs to be done in the AbstractTree tough)
         updateQuery("update " + n.getNodeType().getNodeClass().getSimpleName() + " n set n.name = ? where n.id = ?", name, n.getNodeId());
     }
 

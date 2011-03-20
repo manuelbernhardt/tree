@@ -10,7 +10,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-import models.tree.JSTreeNode;
+import tree.JSTreeNode;
 
 /**
  * Serializer for JSTree nodes

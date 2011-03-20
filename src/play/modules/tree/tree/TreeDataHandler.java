@@ -1,9 +1,7 @@
-package controllers.tree;
+package tree;
 
 import java.util.List;
 import java.util.Map;
-
-import models.tree.JSTreeNode;
 
 /**
  * A TreeHandler provides all the necessary functionality to retrieve trees and persist various operations (renaming, copying, etc.)

@@ -1,15 +1,16 @@
-package controllers.tree;
+package tree.persistent;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import models.tree.GenericTreeNode;
-import models.tree.JSTreeNode;
-import models.tree.Node;
-import models.tree.jpa.TreeNode;
+import play.Play;
+import tree.JSTreeNode;
+import tree.TreeDataHandler;
+import tree.TreePlugin;
 
 /**
  * Base class for persistent trees. It is meant to offer support for more than one storage engine (for now, only JPA is supported).
@@ -17,6 +18,19 @@ import models.tree.jpa.TreeNode;
  * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>
  */
 public abstract class AbstractTree implements TreeDataHandler {
+
+    private static TreeStorage jpaTreeStorage;
+
+    static {
+        Class<?> storage = Play.classloader.loadApplicationClass("controllers.tree.JPATreeStorage");
+        try {
+            jpaTreeStorage = (TreeStorage) storage.newInstance();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
 
     protected static Map<String, NodeType> nodeTypes = new HashMap<String, NodeType>();
     protected static Map<Class, NodeType> nodeTypesByClass = new HashMap<Class, NodeType>();
@@ -36,11 +50,6 @@ public abstract class AbstractTree implements TreeDataHandler {
         return nodeType;
     }
 
-    public static void rename(Node node, String name) {
-        // TODO abstract this so it fits again with the generic storage
-        TreeNode.rename(node, name);
-    }
-
     public static NodeType getNodeType(String name) {
         return nodeTypes.get(name);
     }
@@ -49,25 +58,14 @@ public abstract class AbstractTree implements TreeDataHandler {
         return nodeTypesByClass.get(type);
     }
 
-    protected enum StorageType {JPA}
-
-    protected StorageType getStorageType() {
-        return StorageType.JPA;
-    }
-
-    void init() {
-        if (getStorageType() == StorageType.JPA) {
-            storage = new JPATreeStorage();
-        } else {
-            throw new RuntimeException("Unknown storage type " + getStorageType());
-        }
-
-        // initialize node types
+    public void init() {
         getRootType();
         getNodes();
     }
 
-    private TreeStorage storage = null;
+    // one day someone may come and want to implement another storage
+    // until then we keep things simple
+    private TreeStorage storage = jpaTreeStorage;
 
     /**
      * The qualifier for this tree. By default, it is the classname starting with a lowercase.
@@ -208,7 +206,7 @@ public abstract class AbstractTree implements TreeDataHandler {
         try {
             Constructor c = type.getNodeClass().getDeclaredConstructor();
             Node object = (Node) c.newInstance();
-            object.setName(name);
+            renameObject(object, name);
             return object;
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
@@ -222,6 +220,17 @@ public abstract class AbstractTree implements TreeDataHandler {
         return null;
     }
 
+    private void renameObject(Node object, String name) {
+        List<String> nameFields = TreePlugin.findNameFields(object);
+        for(String field : nameFields) {
+            try {
+                Method setter = object.getClass().getMethod("set" + field.substring(0, 1).toUpperCase() + field.substring(1));
+                setter.invoke(object, name);
+            } catch (Throwable t) {
+                throw new RuntimeException("Error (re)naming node " + object.getClass().getSimpleName());
+            }
+        }
+    }
 
     private void populateTreeNode(GenericTreeNode n, Long parentId, String name, NodeType type) {
         GenericTreeNode parent = getNode(parentId);

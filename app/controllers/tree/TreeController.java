@@ -3,10 +3,16 @@ package controllers.tree;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import models.tree.JSTreeNode;
+import models.tree.jpa.TreeNode;
+import tree.JSTreeNode;
 import play.mvc.Controller;
 import play.mvc.Util;
+import tree.Tree;
+import tree.persistent.GenericTreeNode;
+import tree.simple.SimpleNode;
 
 /**
  * Generic controller for tree operations.
@@ -14,6 +20,8 @@ import play.mvc.Util;
  * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>
  */
 public class TreeController extends Controller {
+
+    private static Gson gson = null;
 
     public static void create(String treeId, Long parentId, Long position, String name, String type, Map<String, String> args) {
         createDirect(treeId, parentId, position, name, type, args);
@@ -86,7 +94,7 @@ public class TreeController extends Controller {
     @Util
     public static void getChildrenDirect(String treeId, Long id, Map<String, String> args) {
         List<? extends JSTreeNode> children = Tree.getTree(treeId).getChildren(id, args);
-        renderJSON(Tree.getGson().toJson(children));
+        renderJSON(getGson().toJson(children));
     }
 
     public static JsonObject makeStatus(int status, Long id) {
@@ -99,4 +107,19 @@ public class TreeController extends Controller {
     }
 
 
+    public static Gson getGson() {
+        if (gson == null) {
+            final GsonBuilder builder = new GsonBuilder();
+            final JSTreeNodeSerializer serializer = new JSTreeNodeSerializer();
+
+            // workaround for gson not being smart enough (yet) to figure out type inheritance
+            builder.registerTypeAdapter(JSTreeNode.class, serializer);
+            builder.registerTypeAdapter(GenericTreeNode.class, serializer);
+            builder.registerTypeAdapter(TreeNode.class, serializer);
+            builder.registerTypeAdapter(SimpleNode.class, serializer);
+
+            gson = builder.create();
+        }
+        return gson;
+    }
 }
