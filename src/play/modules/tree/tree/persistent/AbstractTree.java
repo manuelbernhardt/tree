@@ -224,9 +224,10 @@ public abstract class AbstractTree implements TreeDataHandler {
         List<String> nameFields = TreePlugin.findNameFields(object);
         for(String field : nameFields) {
             try {
-                Method setter = object.getClass().getMethod("set" + field.substring(0, 1).toUpperCase() + field.substring(1));
+                Method setter = object.getClass().getMethod("set" + field.substring(0, 1).toUpperCase() + field.substring(1), String.class);
                 setter.invoke(object, name);
             } catch (Throwable t) {
+                t.printStackTrace();
                 throw new RuntimeException("Error (re)naming node " + object.getClass().getSimpleName());
             }
         }
