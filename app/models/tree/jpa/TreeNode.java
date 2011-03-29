@@ -8,6 +8,7 @@ import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import javax.persistence.PostLoad;
 import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 
 import controllers.tree.JPATreeStorage;
 import tree.persistent.AbstractTree;
@@ -124,6 +125,7 @@ public class TreeNode extends Model implements GenericTreeNode {
         return type;
     }
 
+    @PreUpdate
     @PrePersist
     public void doSave() {
         if (nodeType != null) {
