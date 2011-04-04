@@ -10,7 +10,7 @@ import models.tree.jpa.TreeNode;
 import tree.JSTreeNode;
 import play.mvc.Controller;
 import play.mvc.Util;
-import tree.Tree;
+import tree.TreePlugin;
 import tree.persistent.GenericTreeNode;
 import tree.simple.SimpleNode;
 
@@ -29,7 +29,7 @@ public class TreeController extends Controller {
 
     @Util
     public static void createDirect(String treeId, Long parentId, Long position, String name, String type, Map<String, String> args) {
-        Long node = Tree.getTree(treeId).create(parentId, position, name, type, args);
+        Long node = TreePlugin.getTree(treeId).create(parentId, position, name, type, args);
         JsonObject status = null;
         if (node == null) {
             status = makeStatus(0, null);
@@ -45,7 +45,7 @@ public class TreeController extends Controller {
 
     @Util
     public static void removeDirect(String treeId, Long id, Long parentId, String type, Map<String, String> args) {
-        boolean removed = Tree.getTree(treeId).remove(id, parentId, type, args);
+        boolean removed = TreePlugin.getTree(treeId).remove(id, parentId, type, args);
         if(!removed) {
             renderJSON(makeStatus(0, null).toString());
         } else {
@@ -60,7 +60,7 @@ public class TreeController extends Controller {
     @Util
     public static void renameDirect(String treeId, Long id, String name, String type) {
         boolean renamed;
-        renamed = Tree.getTree(treeId).rename(id, name, type);
+        renamed = TreePlugin.getTree(treeId).rename(id, name, type);
         if (renamed) {
             renderJSON(makeStatus(1, null).toString());
         } else {
@@ -76,9 +76,9 @@ public class TreeController extends Controller {
     public static void moveDirect(String treeId, Long id, Long target, Long position, String name, boolean copy) {
         try {
             if (copy) {
-                Tree.getTree(treeId).copy(id, target, position);
+                TreePlugin.getTree(treeId).copy(id, target, position);
             } else {
-                Tree.getTree(treeId).move(id, target, position);
+                TreePlugin.getTree(treeId).move(id, target, position);
             }
         } catch (Throwable e) {
             e.printStackTrace();
@@ -93,7 +93,7 @@ public class TreeController extends Controller {
 
     @Util
     public static void getChildrenDirect(String treeId, Long id, Map<String, String> args) {
-        List<? extends JSTreeNode> children = Tree.getTree(treeId).getChildren(id, args);
+        List<? extends JSTreeNode> children = TreePlugin.getTree(treeId).getChildren(id, args);
         renderJSON(getGson().toJson(children));
     }
 

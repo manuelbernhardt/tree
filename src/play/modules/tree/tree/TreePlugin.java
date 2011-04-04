@@ -1,5 +1,6 @@
 package tree;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import play.PlayPlugin;
 import play.classloading.ApplicationClasses;
 import play.templates.JavaExtensions;
 import play.utils.Java;
+import tree.persistent.AbstractTree;
 import tree.persistent.Node;
 import tree.persistent.NodeEnhancer;
 import tree.persistent.NodeName;
@@ -25,7 +27,42 @@ import tree.persistent.NodeName;
  */
 public class TreePlugin extends PlayPlugin {
 
-    private static Map<Node, List<String>> nameFieldCache = new HashMap<Node, List<String>>();
+    private final static Map<Node, List<String>> nameFieldCache = new HashMap<Node, List<String>>();
+    private final static Map<String, TreeDataHandler> allTrees = new HashMap<String, TreeDataHandler>();
+
+    @Override
+    public void onApplicationStart() {
+        init();
+    }
+
+    @Override
+    public void onLoad() {
+        allTrees.clear();
+        init();
+    }
+
+    private static void init() {
+        // initialize all trees
+        List<ApplicationClasses.ApplicationClass> trees = Play.classes.getAssignableClasses(TreeDataHandler.class);
+        for (ApplicationClasses.ApplicationClass tree : trees) {
+            if (!tree.javaClass.getName().equals("tree.persistent.AbstractTree")) {
+                try {
+                    Constructor c = tree.javaClass.getDeclaredConstructor();
+                    TreeDataHandler t = (TreeDataHandler) c.newInstance();
+                    String name = t.getName();
+                    if (name == null) {
+                        throw new RuntimeException("No valid name given for tree '" + tree.javaClass.getSimpleName() + "'. Are you sure you implemented getName() ?");
+                    }
+                    if (t instanceof AbstractTree) {
+                        ((AbstractTree) t).init();
+                    }
+                    allTrees.put(name, t);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 
     public static List<String> findNameFields(Node node) {
         List<String> nameFields = new ArrayList<String>();
@@ -37,6 +74,14 @@ public class TreePlugin extends PlayPlugin {
             }
         }
         return nameFields;
+    }
+
+    public static TreeDataHandler getTree(String treeId) {
+        TreeDataHandler tree = allTrees.get(treeId);
+        if (tree == null) {
+            throw new RuntimeException(String.format("Could not find implementation of tree '%s'.", treeId));
+        }
+        return tree;
     }
 
     @Override

@@ -1,9 +1,9 @@
 import java.util.List;
 
+import tree.TreePlugin;
 import tree.persistent.AbstractTree;
 import tree.JSTreeNode;
 import tree.persistent.NodeType;
-import tree.Tree;
 import models.test.Folder;
 import models.test.TestTree;
 import tree.persistent.GenericTreeNode;
@@ -27,7 +27,7 @@ public class TreeTest extends UnitTest {
 
     @Before
     public void setUp() {
-        t = (AbstractTree) Tree.getTree("testTree");
+        t = (AbstractTree) TreePlugin.getTree("testTree");
 
         DRIVE = TestTree.getNodeType("drive");
         FOLDER = TestTree.getNodeType("folder");
@@ -46,7 +46,7 @@ public class TreeTest extends UnitTest {
 
     @After
     public void tearDown() throws Exception {
-        AbstractTree t = (AbstractTree) Tree.getTree("testTree");
+        AbstractTree t = (AbstractTree) TreePlugin.getTree("testTree");
         List<? extends JSTreeNode> drives = t.getChildren(-1l, null);
         for(JSTreeNode d : drives) {
             t.remove(d.getId(), -1l, "", null);
@@ -91,12 +91,12 @@ public class TreeTest extends UnitTest {
         TreeNode systemLibraries = TreeNode.findById(88l);
         TreeNode music = TreeNode.findById(81l);
 
-        Tree.getTree("testTree").copy(data, starwars, 0l);
+        TreePlugin.getTree("testTree").copy(data, starwars, 0l);
 
         JPA.em().flush();
         JPA.em().clear();
 
-        List<? extends JSTreeNode> copied = Tree.getTree("testTree").getChildren(starwars, null);
+        List<? extends JSTreeNode> copied = TreePlugin.getTree("testTree").getChildren(starwars, null);
         assertEquals(1, copied.size());
 
         Folder original = Folder.findById(data);
@@ -104,7 +104,7 @@ public class TreeTest extends UnitTest {
         assertEquals(original.getName(), copy.getName());
         assertNotSame(original.getId(), copy.getId());
 
-        List<? extends JSTreeNode> children = Tree.getTree("testTree").getChildren(original.getId(), null);
+        List<? extends JSTreeNode> children = TreePlugin.getTree("testTree").getChildren(original.getId(), null);
         assertEquals(2, children.size());
 
         // TODO test if children are copied too
