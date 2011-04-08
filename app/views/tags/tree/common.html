@@ -12,7 +12,7 @@ $.post(
         "${createRoute}",
 {
   "treeId" : "${_id}",
-  "parentId": data.rslt.parent.attr ? data.rslt.parent.attr("id").replace("node_", "") : -1,
+  "parentId": data.rslt.parent.attr ? sanitizeId(data.rslt.parent.attr("id")) : -1,
   "position" : data.rslt.position,
   "name" : data.rslt.name,
   "type" : data.rslt.obj.attr("rel"),
@@ -21,7 +21,7 @@ $.post(
 },
         function (r) {
           if (r.status) {
-            $(data.rslt.obj).attr("id", "node_" + r.id);
+            $(data.rslt.obj).attr("id", "node_" + r.type + "_" + r.id);
           }
           else {
             $.jstree.rollback(data.rlbk);
@@ -37,8 +37,8 @@ data.rslt.obj.each(function () {
     url: "${removeRoute}",
     data : {
       "treeId" : "${_id}",
-      "id" : this.id.replace("node_", ""),
-      "parentId": data.rslt.parent.attr ? data.rslt.parent.attr("id").replace("node_", "") : -1,
+      "id" : sanitizeId(this.id),
+      "parentId": data.rslt.parent.attr ? sanitizeId(data.rslt.parent.attr("id")) : -1,
       "type" : data.rslt.obj.attr("rel"),
       "args" : data.rslt.obj.data("args") ? data.rslt.obj.data("args") : null
 
@@ -56,7 +56,7 @@ $.post(
         "${renameRoute}",
 {
   "treeId" : "${_id}",
-  "id" : data.rslt.obj.attr("id").replace("node_", ""),
+  "id" : sanitizeId(data.rslt.obj.attr("id")),
   "name" : data.rslt.new_name,
   "type" : data.rslt.obj.attr("rel")
 },
@@ -75,8 +75,8 @@ data.rslt.o.each(function (i) {
     url: "${moveRoute}",
     data : {
       "treeId" : "${_id}",
-      "id" : $(this).attr("id").replace("node_", ""),
-      "target" : data.rslt.np.attr("id").replace("node_", ""),
+      "id" : sanitizeId($(this).attr("id")),
+      "target" : sanitizeId(data.rslt.np.attr("id")),
       "position" : data.rslt.cp + i,
       "name" : data.rslt.name,
       "copy" : data.rslt.cy ? true : false
@@ -86,7 +86,7 @@ data.rslt.o.each(function (i) {
         $.jstree.rollback(data.rlbk);
       }
       else {
-        $(data.rslt.oc).attr("id", "node_" + r.id);
+        $(data.rslt.oc).attr("id", "node_" + r.type + "_" + r.id);
         if (data.rslt.cy && $(data.rslt.oc).children("UL").length) {
           data.inst.refresh(data.inst._get_parent(data.rslt.oc));
         }
@@ -95,3 +95,7 @@ data.rslt.o.each(function (i) {
   });
 });
 });
+
+function sanitizeId(id) {
+  return id.substring(id.lastIndexOf("_")+1);
+}
