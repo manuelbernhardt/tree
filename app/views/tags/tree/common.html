@@ -12,7 +12,7 @@ $.post(
         "${createRoute}",
 {
   "treeId" : "${_id}",
-  "parentId": data.rslt.parent.attr ? sanitizeId(data.rslt.parent.attr("id")) : -1,
+  "parentId": data.rslt.parent.attr ? extractId(data.rslt.parent.attr("id")) : -1,
   "position" : data.rslt.position,
   "name" : data.rslt.name,
   "type" : data.rslt.obj.attr("rel"),
@@ -37,8 +37,8 @@ data.rslt.obj.each(function () {
     url: "${removeRoute}",
     data : {
       "treeId" : "${_id}",
-      "id" : sanitizeId(this.id),
-      "parentId": data.rslt.parent.attr ? sanitizeId(data.rslt.parent.attr("id")) : -1,
+      "id" : extractId(this.id),
+      "parentId": data.rslt.parent.attr ? extractId(data.rslt.parent.attr("id")) : -1,
       "type" : data.rslt.obj.attr("rel"),
       "args" : data.rslt.obj.data("args") ? data.rslt.obj.data("args") : null
 
@@ -56,7 +56,7 @@ $.post(
         "${renameRoute}",
 {
   "treeId" : "${_id}",
-  "id" : sanitizeId(data.rslt.obj.attr("id")),
+  "id" : extractId(data.rslt.obj.attr("id")),
   "name" : data.rslt.new_name,
   "type" : data.rslt.obj.attr("rel")
 },
@@ -75,8 +75,8 @@ data.rslt.o.each(function (i) {
     url: "${moveRoute}",
     data : {
       "treeId" : "${_id}",
-      "id" : sanitizeId($(this).attr("id")),
-      "target" : sanitizeId(data.rslt.np.attr("id")),
+      "id" : extractId($(this).attr("id")),
+      "target" : extractId(data.rslt.np.attr("id")),
       "position" : data.rslt.cp + i,
       "name" : data.rslt.name,
       "copy" : data.rslt.cy ? true : false
@@ -96,6 +96,6 @@ data.rslt.o.each(function (i) {
 });
 });
 
-function sanitizeId(id) {
+function extractId(id) {
   return id.substring(id.lastIndexOf("_")+1);
 }
