@@ -13,6 +13,7 @@ $.post(
 {
   "treeId" : "${_id}",
   "parentId": data.rslt.parent.attr ? extractId(data.rslt.parent.attr("id")) : -1,
+  "parentType": data.rslt.parent.attr ? data.rslt.parent.attr("rel") : "",
   "position" : data.rslt.position,
   "name" : data.rslt.name,
   "type" : data.rslt.obj.attr("rel"),
@@ -21,7 +22,7 @@ $.post(
 },
         function (r) {
           if (r.status) {
-            $(data.rslt.obj).attr("id", "node_" + r.type + "_" + r.id);
+            $(data.rslt.obj).attr("id", "node_" + r.rel + "_" + r.id);
           }
           else {
             $.jstree.rollback(data.rlbk);
@@ -76,7 +77,9 @@ data.rslt.o.each(function (i) {
     data : {
       "treeId" : "${_id}",
       "id" : extractId($(this).attr("id")),
+      "type" : $(this).attr("rel"),
       "target" : extractId(data.rslt.np.attr("id")),
+      "targetType" : data.rslt.np.attr("rel"),
       "position" : data.rslt.cp + i,
       "name" : data.rslt.name,
       "copy" : data.rslt.cy ? true : false

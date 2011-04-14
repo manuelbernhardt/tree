@@ -128,15 +128,15 @@ public abstract class AbstractTree implements TreeDataHandler {
         return true;
     }
 
-    public GenericTreeNode getNode(Long id) {
-        return storage.getTreeNode(id, getName());
+    public GenericTreeNode getNode(Long objectId, String type, String treeId) {
+        return storage.getTreeNode(objectId, type, getName());
     }
 
-    public List<? extends JSTreeNode> getChildren(Long parentId, Map<String, String> args) {
-        return storage.getChildren(parentId, getName());
+    public List<? extends JSTreeNode> getChildren(Long parentId, String type, Map<String, String> args) {
+        return storage.getChildren(parentId, getName(), type);
     }
 
-    public Long create(Long parentId, Long position, String name, String type, Map<String, String> args) {
+    public Long create(Long parentId, String parentType, Long position, String name, String type, Map<String, String> args) {
         NodeType nt = null;
         if (type == null) {
             nt = getRootType();
@@ -151,7 +151,7 @@ public abstract class AbstractTree implements TreeDataHandler {
 
         try {
             GenericTreeNode node = storage.getNewTreeNode();
-            populateTreeNode(node, parentId, name, nt);
+            populateTreeNode(node, parentId, parentType, name, nt, this.getName());
             node = storage.createTreeNode(node);
 
             Node object = createObjectNode(name, nt, args);
@@ -163,10 +163,10 @@ public abstract class AbstractTree implements TreeDataHandler {
             node.setNodeId(object.getId());
 
             // compute only when we have an ID
-            node.setPath(storage.computePath(storage.getTreeNode(parentId, getName()), node.getId()));
+            node.setPath(storage.computePath(storage.getTreeNode(parentId, parentType, getName()), node.getId()));
             node = storage.updateTreeNode(node);
 
-            return node.getId();
+            return object.getId();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -175,7 +175,7 @@ public abstract class AbstractTree implements TreeDataHandler {
 
     public boolean rename(Long id, String name, String type) {
         // TODO return false if error
-        storage.rename(id, name, getName());
+        storage.rename(id, name, getName(), type);
         return true;
     }
 
@@ -183,13 +183,13 @@ public abstract class AbstractTree implements TreeDataHandler {
         storage.copy(id, target, true, getNodes(), getName());
     }
 
-    public void move(Long id, Long target, Long position) {
-        storage.move(id, target, getName());
+    public void move(Long id, String type, Long target, String targetType, Long position) {
+        storage.move(id, type, target, targetType, getName());
     }
 
     public boolean remove(Long id, Long parentId, String type, Map<String, String> args) {
         // TODO return false if error
-        storage.remove(id, isRemovalPropagated(), getName());
+        storage.remove(id, isRemovalPropagated(), getName(), type);
         return true;
     }
 
@@ -233,10 +233,10 @@ public abstract class AbstractTree implements TreeDataHandler {
         }
     }
 
-    private void populateTreeNode(GenericTreeNode n, Long parentId, String name, NodeType type) {
-        GenericTreeNode parent = getNode(parentId);
-        if (parent == null && parentId != -1) {
-            throw new RuntimeException("Could not find parent node with ID " + parentId);
+    private void populateTreeNode(GenericTreeNode n, Long parentObjectId, String parentType, String name, NodeType type, String treeId) {
+        GenericTreeNode parent = getNode(parentObjectId, parentType, treeId);
+        if (parent == null && parentObjectId != -1) {
+            throw new RuntimeException("Could not find parent node with ID " + parentObjectId);
         }
         if (parent == null) {
             n.setLevel(0);

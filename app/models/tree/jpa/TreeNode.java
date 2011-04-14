@@ -142,6 +142,10 @@ public class TreeNode extends Model implements GenericTreeNode {
         return TreeNode.find("from TreeNode n where id = ? and treeId = ?", id, treeId).first();
     }
 
+    public static TreeNode find(Long objectId, String type, String treeId) {
+        return TreeNode.find("from TreeNode n where nodeId = ? and type = ? and treeId = ?", objectId, type, treeId).first();
+    }
+
     public static TreeNode findById(Long id) {
         throw new RuntimeException("Use find(id, treeId)");
     }

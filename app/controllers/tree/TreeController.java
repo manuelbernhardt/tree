@@ -23,18 +23,19 @@ public class TreeController extends Controller {
 
     private static Gson gson = null;
 
-    public static void create(String treeId, Long parentId, Long position, String name, String type, Map<String, String> args) {
-        createDirect(treeId, parentId, position, name, type, args);
+    public static void create(String treeId, Long parentId, String parentType, Long position, String name, String type, Map<String, String> args) {
+        createDirect(treeId, parentId, parentType, position, name, type, args);
     }
 
     @Util
-    public static void createDirect(String treeId, Long parentId, Long position, String name, String type, Map<String, String> args) {
-        Long node = TreePlugin.getTree(treeId).create(parentId, position, name, type, args);
+    public static void createDirect(String treeId, Long parentId, String parentType, Long position, String name, String type, Map<String, String> args) {
+        Long objectId = TreePlugin.getTree(treeId).create(parentId, parentType, position, name, type, args);
         JsonObject status = null;
-        if (node == null) {
+        if (objectId == null) {
             status = makeStatus(0, null);
         } else {
-            status = makeStatus(1, node);
+            status = makeStatus(1, objectId);
+            status.addProperty("rel", type);
         }
         renderJSON(status.toString());
     }
@@ -68,17 +69,17 @@ public class TreeController extends Controller {
         }
     }
 
-    public static void move(String treeId, Long id, Long target, Long position, String name, boolean copy) {
-        moveDirect(treeId, id, target, position, name, copy);
+    public static void move(String treeId, Long id, String type, Long target, String targetType, Long position, String name, boolean copy) {
+        moveDirect(treeId, id, type, target, targetType, position, name, copy);
     }
 
     @Util
-    public static void moveDirect(String treeId, Long id, Long target, Long position, String name, boolean copy) {
+    public static void moveDirect(String treeId, Long id, String type, Long target, String targetType, Long position, String name, boolean copy) {
         try {
             if (copy) {
                 TreePlugin.getTree(treeId).copy(id, target, position);
             } else {
-                TreePlugin.getTree(treeId).move(id, target, position);
+                TreePlugin.getTree(treeId).move(id, type, target, targetType, position);
             }
         } catch (Throwable e) {
             e.printStackTrace();
@@ -87,13 +88,13 @@ public class TreeController extends Controller {
         renderJSON(makeStatus(1, null).toString());
     }
 
-    public static void getChildren(String treeId, Long id, Map<String, String> args) {
-        getChildrenDirect(treeId, id, args);
+    public static void getChildren(String treeId, Long id, String type, Map<String, String> args) {
+        getChildrenDirect(treeId, id, type, args);
     }
 
     @Util
-    public static void getChildrenDirect(String treeId, Long id, Map<String, String> args) {
-        List<? extends JSTreeNode> children = TreePlugin.getTree(treeId).getChildren(id, args);
+    public static void getChildrenDirect(String treeId, Long id, String type, Map<String, String> args) {
+        List<? extends JSTreeNode> children = TreePlugin.getTree(treeId).getChildren(id, type, args);
         renderJSON(getGson().toJson(children));
     }
 

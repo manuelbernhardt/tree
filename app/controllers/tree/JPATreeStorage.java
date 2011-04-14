@@ -60,16 +60,14 @@ public class JPATreeStorage extends TreeStorage {
     }
 
     @Override
-    public GenericTreeNode getTreeNode(Long id, String treeId) {
-        JPABase node = TreeNode.find(id, treeId);
+    public GenericTreeNode getTreeNode(Long id, String type, String treeId) {
+        JPABase node = TreeNode.find(id, type, treeId);
         return (GenericTreeNode) node;
     }
 
-
-
     @Override
-    public void remove(Long id, boolean removeObject, String treeId) {
-        TreeNode parent = TreeNode.find(id, treeId);
+    public void remove(Long id, boolean removeObject, String treeId, String type) {
+        TreeNode parent = TreeNode.find(id, type, treeId);
 
         String pathLike = parent.getPath() + "%";
         List<Long> kids = queryList("select n.id from TreeNode n where n.treeId = ? and n.path like ? and n.level > ? and n.threadRoot.id = ? order by n.path desc", Long.class, treeId, pathLike, parent.getLevel(), parent.getThreadRoot().getId());
@@ -77,9 +75,9 @@ public class JPATreeStorage extends TreeStorage {
             if (removeObject) {
                 List<Object[]> nodes = queryList("select n.nodeId, n.type from TreeNode n where n.treeId = ? and n.path like ? and n.level > ? and n.threadRoot.id = ? order by n.type desc", Object[].class, treeId, pathLike, parent.getLevel(), parent.getThreadRoot().getId());
                 Map<String, List<Long>> byType = toTypeMap(nodes);
-                for(String type : byType.keySet()) {
-                    NodeType t = AbstractTree.getNodeType(type);
-                    namedUpdateQuery("delete from " + t.getNodeClass().getSimpleName() + " n where n.id in (:nodes)", "nodes", byType.get(type));
+                for(String t : byType.keySet()) {
+                    NodeType nodeType = AbstractTree.getNodeType(t);
+                    namedUpdateQuery("delete from " + nodeType.getNodeClass().getSimpleName() + " n where n.id in (:nodes)", "nodes", byType.get(nodeType));
                 }
             }
             namedUpdateQuery("delete from TreeNode n where n.treeId = '" + treeId + "' and n.id in (:kids)", "kids", kids);
@@ -89,8 +87,8 @@ public class JPATreeStorage extends TreeStorage {
             updateQuery("delete from " + parent.getNodeType().getNodeClass().getSimpleName() + " n where n.id = ?", parent.getNodeId());
         }
 
-        updateQuery("update TreeNode n set n.threadRoot = null where n.treeId = '" + treeId + "' and n.id = ?", id);
-        updateQuery("delete from TreeNode n where n.treeId = '" + treeId + "' and n.id = ?", id);
+        updateQuery("update TreeNode n set n.threadRoot = null where n.treeId = '" + treeId + "' and n.id = ?", parent.getId());
+        updateQuery("delete from TreeNode n where n.treeId = '" + treeId + "' and n.id = ?", parent.getId());
     }
 
     private Map<String, List<Long>> toTypeMap(List<Object[]> nodes) {
@@ -109,11 +107,11 @@ public class JPATreeStorage extends TreeStorage {
     }
 
     @Override
-    public List<JSTreeNode> getChildren(Long parentId, String treeId) {
-        if (parentId == null || parentId == -1) {
+    public List<JSTreeNode> getChildren(Long parentObjectId, String treeId, String type) {
+        if (parentObjectId == null || parentObjectId == -1) {
             return TreeNode.find("from TreeNode n where n.treeId = '" + treeId + "' and n.threadRoot = n").fetch();
         } else {
-            TreeNode parent = TreeNode.find(parentId, treeId);
+            TreeNode parent = TreeNode.find(parentObjectId, type, treeId);
             return getChildren(parent.getLevel(), parent.getPath(), parent.getThreadRoot(), treeId);
         }
     }
@@ -123,8 +121,9 @@ public class JPATreeStorage extends TreeStorage {
     }
 
     @Override
-    public void rename(Long id, String name, String treeId) {
-        TreeNode n = TreeNode.find(id, treeId);
+    public void rename(Long objectId, String name, String treeId, String type) {
+
+        TreeNode n = TreeNode.find(objectId, type, treeId);
         n.setName(name);
         n.save();
 
@@ -136,10 +135,10 @@ public class JPATreeStorage extends TreeStorage {
     }
 
     @Override
-    public void move(Long id, Long target, String treeId) {
-        TreeNode node = TreeNode.find(id, treeId);
+    public void move(Long objectId, String type, Long target, String targetType, String treeId) {
+        TreeNode node = TreeNode.find(objectId, type, treeId);
         TreeNode oldParent = (TreeNode) node.getParent();
-        TreeNode parent = TreeNode.find(target, treeId);
+        TreeNode parent = TreeNode.find(target, targetType, treeId);
 
         String newPath = parent.getPath();
         Integer delta = parent.getLevel() - node.getLevel() + 1;

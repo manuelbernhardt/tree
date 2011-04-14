@@ -10,6 +10,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import models.tree.jpa.TreeNode;
 import tree.JSTreeNode;
 
 /**
@@ -45,12 +46,22 @@ public class JSTreeNodeSerializer implements JsonSerializer<JSTreeNode> {
     private void populateBasicProperties(JSTreeNode node, JsonSerializationContext context, JsonObject o) {
         o.addProperty("data", node.getName());
         Map<String, Object> attributes = new HashMap<String, Object>();
-        attributes.put("id", "node_" + node.getId());
+        Long id = getNodeId(node);
+        attributes.put("id", "node_" + node.getType() + "_" + id);
         attributes.put("rel", node.getType());
         o.add("attr", context.serialize(attributes));
         if (node.isContainer()) {
             o.addProperty("state", state(node.isOpen()));
         }
+    }
+
+    public Long getNodeId(JSTreeNode node) {
+        Long id = node.getId();
+        // TODO this is a hack, implement & register a subclass that serializes TreeNode-s and overrides this method
+        if(node instanceof TreeNode) {
+            id = ((TreeNode)node).getNodeId();
+        }
+        return id;
     }
 
     private String state(boolean open) {

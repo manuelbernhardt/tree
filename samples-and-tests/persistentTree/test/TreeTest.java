@@ -32,22 +32,22 @@ public class TreeTest extends UnitTest {
         DRIVE = TestTree.getNodeType("drive");
         FOLDER = TestTree.getNodeType("folder");
 
-        c = t.create(-1l, 0l, "C", DRIVE.getName(), null);
-        data = t.create(c, 0l, "Data", FOLDER.getName(), null);
-        games = t.create(c, 0l, "Games", FOLDER.getName(), null);
-        admin = t.create(data, 0l, "Admin", FOLDER.getName(), null);
-        letters = t.create(data, 0l, "Letters", FOLDER.getName(), null);
+        c = t.create(-1l, parentType, 0l, "C", DRIVE.getName(), null);
+        data = t.create(c, parentType, 0l, "Data", FOLDER.getName(), null);
+        games = t.create(c, parentType, 0l, "Games", FOLDER.getName(), null);
+        admin = t.create(data, parentType, 0l, "Admin", FOLDER.getName(), null);
+        letters = t.create(data, parentType, 0l, "Letters", FOLDER.getName(), null);
 
-        d = t.create(-1l, 0l, "D", DRIVE.getName(), null);
-        movies = t.create(d, 0l, "Movies", FOLDER.getName(), null);
-        starwars = t.create(movies, 0l, "Starwars", FOLDER.getName(), null);
-        matrix = t.create(movies, 0l, "The Matrix", FOLDER.getName(), null);
+        d = t.create(-1l, parentType, 0l, "D", DRIVE.getName(), null);
+        movies = t.create(d, parentType, 0l, "Movies", FOLDER.getName(), null);
+        starwars = t.create(movies, parentType, 0l, "Starwars", FOLDER.getName(), null);
+        matrix = t.create(movies, parentType, 0l, "The Matrix", FOLDER.getName(), null);
     }
 
     @After
     public void tearDown() throws Exception {
         AbstractTree t = (AbstractTree) TreePlugin.getTree("testTree");
-        List<? extends JSTreeNode> drives = t.getChildren(-1l, null);
+        List<? extends JSTreeNode> drives = t.getChildren(-1l, type, null);
         for(JSTreeNode d : drives) {
             t.remove(d.getId(), -1l, "", null);
         }
@@ -58,12 +58,12 @@ public class TreeTest extends UnitTest {
 
     @Test
     public void removeRecursively() {
-        Long root = t.create(-1l, 0l, "Root", DRIVE.getName(), null);
-        Long child1 = t.create(root, 0l, "Child 1", FOLDER.getName(), null);
-        Long child2 = t.create(child1, 0l, "child 2", FOLDER.getName(), null);
+        Long root = t.create(-1l, parentType, 0l, "Root", DRIVE.getName(), null);
+        Long child1 = t.create(root, parentType, 0l, "Child 1", FOLDER.getName(), null);
+        Long child2 = t.create(child1, parentType, 0l, "child 2", FOLDER.getName(), null);
 
-        assertEquals(1, t.getChildren(root, null).size());
-        assertEquals(1, t.getChildren(child1, null).size());
+        assertEquals(1, t.getChildren(root, type, null).size());
+        assertEquals(1, t.getChildren(child1, type, null).size());
 
         try {
             t.remove(root, null, null, null);
@@ -83,7 +83,7 @@ public class TreeTest extends UnitTest {
         t.rename(starwars, "Star Wars", null);
         // usually this is done by the controller
         JPA.em().clear();
-        assertEquals("Star Wars", t.getChildren(movies, null).get(0).getName());
+        assertEquals("Star Wars", t.getChildren(movies, type, null).get(0).getName());
     }
 
     @Test
@@ -96,7 +96,7 @@ public class TreeTest extends UnitTest {
         JPA.em().flush();
         JPA.em().clear();
 
-        List<? extends JSTreeNode> copied = TreePlugin.getTree("testTree").getChildren(starwars, null);
+        List<? extends JSTreeNode> copied = TreePlugin.getTree("testTree").getChildren(starwars, type, null);
         assertEquals(1, copied.size());
 
         Folder original = Folder.findById(data);
@@ -104,7 +104,7 @@ public class TreeTest extends UnitTest {
         assertEquals(original.getName(), copy.getName());
         assertNotSame(original.getId(), copy.getId());
 
-        List<? extends JSTreeNode> children = TreePlugin.getTree("testTree").getChildren(original.getId(), null);
+        List<? extends JSTreeNode> children = TreePlugin.getTree("testTree").getChildren(original.getId(), type, null);
         assertEquals(2, children.size());
 
         // TODO test if children are copied too

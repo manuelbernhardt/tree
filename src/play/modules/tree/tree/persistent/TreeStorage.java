@@ -22,15 +22,15 @@ public abstract class TreeStorage {
 
     public abstract GenericTreeNode updateTreeNode(GenericTreeNode node);
 
-    public abstract GenericTreeNode getTreeNode(Long id, String treeId);
+    public abstract GenericTreeNode getTreeNode(Long id, String type, String treeId);
 
-    public abstract List<JSTreeNode> getChildren(Long parentId, String treeId);
+    public abstract List<JSTreeNode> getChildren(Long parentId, String treeId, String type);
 
-    public abstract void remove(Long id, boolean removeObject, String treeId);
+    public abstract void remove(Long id, boolean removeObject, String treeId, String type);
 
-    public abstract void rename(Long id, String name, String treeId);
+    public abstract void rename(Long id, String name, String treeId, String type);
 
-    public abstract void move(Long id, Long target, String treeId);
+    public abstract void move(Long id, String type, Long target, String targetType, String treeId);
 
     public abstract void copy(Long id, Long target, boolean copyObject, NodeType[] objectTypes, String treeId);
 
