@@ -139,11 +139,11 @@ public class TreeNode extends Model implements GenericTreeNode {
     }
 
     public static TreeNode find(Long id, String treeId) {
-        return TreeNode.find("from TreeNode n where id = ? and treeId = ?", id, treeId).first();
+        return TreeNode.find("from TreeNode n where id = ? and treeId = ?", id, treeId).<TreeNode>first();
     }
 
     public static TreeNode find(Long objectId, String type, String treeId) {
-        return TreeNode.find("from TreeNode n where nodeId = ? and type = ? and treeId = ?", objectId, type, treeId).first();
+        return TreeNode.find("from TreeNode n where nodeId = ? and type = ? and treeId = ?", objectId, type, treeId).<TreeNode>first();
     }
 
     public static TreeNode findById(Long id) {
@@ -157,7 +157,7 @@ public class TreeNode extends Model implements GenericTreeNode {
         NodeType type = AbstractTree.getNodeType(object.getClass());
         // may happen before the tree is initialized.
         if(type != null) {
-            List<TreeNode> treeNodes = TreeNode.find("from TreeNode n where n.type = ? and n.nodeId = ?", type.getName(), object.getId()).fetch();
+            List<TreeNode> treeNodes = TreeNode.find("from TreeNode n where n.type = ? and n.nodeId = ?", type.getName(), object.getId()).<TreeNode>fetch();
             for(TreeNode n : treeNodes) {
                 n.name = name;
                 n.save();

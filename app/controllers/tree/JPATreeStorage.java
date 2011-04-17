@@ -109,7 +109,7 @@ public class JPATreeStorage extends TreeStorage {
     @Override
     public List<JSTreeNode> getChildren(Long parentObjectId, String treeId, String type) {
         if (parentObjectId == null || parentObjectId == -1) {
-            return TreeNode.find("from TreeNode n where n.treeId = '" + treeId + "' and n.threadRoot = n").fetch();
+            return TreeNode.find("from TreeNode n where n.treeId = '" + treeId + "' and n.threadRoot = n").<JSTreeNode>fetch();
         } else {
             TreeNode parent = TreeNode.find(parentObjectId, type, treeId);
             return getChildren(parent.getLevel(), parent.getPath(), parent.getThreadRoot(), treeId);
@@ -117,7 +117,7 @@ public class JPATreeStorage extends TreeStorage {
     }
 
     public static List<JSTreeNode> getChildren(Integer parentLevel, String parentPath, TreeNode parentThreadRoot, String treeId) {
-        return TreeNode.find("from TreeNode n where n.treeId = '" + treeId + "' and n.level = ? and n.path like ? and n.threadRoot = ?", parentLevel + 1, parentPath + "%", parentThreadRoot).fetch();
+        return TreeNode.find("from TreeNode n where n.treeId = '" + treeId + "' and n.level = ? and n.path like ? and n.threadRoot = ?", parentLevel + 1, parentPath + "%", parentThreadRoot).<JSTreeNode>fetch();
     }
 
     @Override
