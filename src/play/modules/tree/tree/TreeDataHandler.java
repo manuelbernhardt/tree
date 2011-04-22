@@ -18,9 +18,9 @@ public interface TreeDataHandler {
 
     boolean rename(Long id, String name, String type);
 
-    void copy(Long id, Long target, Long position);
+    boolean copy(Long id, Long target, Long position);
 
-    void move(Long id, String type, Long target, String targetType, Long position);
+    boolean move(Long id, String type, Long target, String targetType, Long position);
 
     boolean remove(Long id, Long parentId, String type, Map<String, String> args);
 }

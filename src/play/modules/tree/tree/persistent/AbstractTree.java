@@ -179,12 +179,16 @@ public abstract class AbstractTree implements TreeDataHandler {
         return true;
     }
 
-    public void copy(Long id, Long target, Long position) {
+    public boolean copy(Long id, Long target, Long position) {
+        // TODO return false if error
         storage.copy(id, target, true, getNodes(), getName());
+        return true;
     }
 
-    public void move(Long id, String type, Long target, String targetType, Long position) {
+    public boolean move(Long id, String type, Long target, String targetType, Long position) {
+        // TODO return false if error
         storage.move(id, type, target, targetType, getName());
+        return true;
     }
 
     public boolean remove(Long id, Long parentId, String type, Map<String, String> args) {

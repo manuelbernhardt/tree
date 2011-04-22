@@ -75,17 +75,22 @@ public class TreeController extends Controller {
 
     @Util
     public static void moveDirect(String treeId, Long id, String type, Long target, String targetType, Long position, String name, boolean copy) {
+        boolean success = false;
         try {
             if (copy) {
-                TreePlugin.getTree(treeId).copy(id, target, position);
+                success = TreePlugin.getTree(treeId).copy(id, target, position);
             } else {
-                TreePlugin.getTree(treeId).move(id, type, target, targetType, position);
+                success = TreePlugin.getTree(treeId).move(id, type, target, targetType, position);
             }
         } catch (Throwable e) {
             e.printStackTrace();
+            success = false;
+        }
+        if(success) {
+            renderJSON(makeStatus(1, null).toString());
+        } else {
             renderJSON(makeStatus(0, null).toString());
         }
-        renderJSON(makeStatus(1, null).toString());
     }
 
     public static void getChildren(String treeId, Long id, String type, Map<String, String> args) {
