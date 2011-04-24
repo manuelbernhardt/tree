@@ -1,13 +1,11 @@
 package controllers.tree;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.Query;
 
-import models.tree.jpa.AbstractNode;
 import models.tree.jpa.TreeNode;
 import play.db.jpa.JPA;
 import play.db.jpa.JPABase;
@@ -20,15 +18,23 @@ import tree.persistent.NodeType;
 import tree.persistent.TreeStorage;
 
 /**
- * JPA implementation of the TreeStorage
+ * JPA implementation of the TreeStorage.
+ * By default, the {@link TreeNode} class is used to store all information necessary for node manipulation (path, ...).
+ * It is possible to make use of a subclass of TreeNode by using the constructor {@link JPATreeStorage#JPATreeStorage(Class<TreeNode) treeNodeClass}
  * FIXME copying trees is broken, the tree information (paths) need to be re-computed recursively when copying hierarchies.
  *
  * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>
  */
 public class JPATreeStorage extends TreeStorage {
 
+    private final Class<? extends TreeNode> treeNodeClass;
+
     public JPATreeStorage() {
-        
+        this.treeNodeClass = TreeNode.class;
+    }
+
+    public JPATreeStorage(Class<? extends TreeNode> treeNodeClass) {
+        this.treeNodeClass = treeNodeClass;
     }
 
     @Override
@@ -37,14 +43,14 @@ public class JPATreeStorage extends TreeStorage {
     }
 
     @Override
-    public GenericTreeNode createTreeNode(GenericTreeNode node) {
+    public GenericTreeNode persistTreeNode(GenericTreeNode node) {
         TreeNode treeNode = (TreeNode) node;
         treeNode.create();
         return node;
     }
 
     @Override
-    public Node createObject(Node concrete) {
+    public Node persistObject(Node concrete) {
         ((Model) concrete).create();
         return concrete;
     }
@@ -60,22 +66,22 @@ public class JPATreeStorage extends TreeStorage {
     }
 
     @Override
-    public GenericTreeNode getTreeNode(Long id, String type, String treeId) {
-        JPABase node = TreeNode.find(id, type, treeId);
+    public GenericTreeNode getTreeNode(Long nodeId, String type, String treeId) {
+        JPABase node = findTreeNode(nodeId, treeId, type);
         return (GenericTreeNode) node;
     }
 
     @Override
     public void remove(Long id, boolean removeObject, String treeId, String type) {
-        TreeNode parent = TreeNode.find(id, type, treeId);
+        TreeNode parent = findTreeNode(id, treeId, type);
 
         String pathLike = parent.getPath() + "%";
-        List<Long> kids = queryList("select n.id from TreeNode n where n.treeId = ? and n.path like ? and n.level > ? and n.threadRoot.id = ? order by n.path desc", Long.class, treeId, pathLike, parent.getLevel(), parent.getThreadRoot().getId());
+        List<Long> kids = queryList("select n.id from TreeNode n where n.treeId = ? and n.path like ? and n.level > ? and n.threadRoot.id = ? order by n.path desc", treeId, pathLike, parent.getLevel(), parent.getThreadRoot().getId());
         if (!kids.isEmpty()) {
             if (removeObject) {
-                List<Object[]> nodes = queryList("select n.nodeId, n.type from TreeNode n where n.treeId = ? and n.path like ? and n.level > ? and n.threadRoot.id = ? order by n.type desc", Object[].class, treeId, pathLike, parent.getLevel(), parent.getThreadRoot().getId());
+                List<Object[]> nodes = queryList("select n.nodeId, n.type from TreeNode n where n.treeId = ? and n.path like ? and n.level > ? and n.threadRoot.id = ? order by n.type desc", treeId, pathLike, parent.getLevel(), parent.getThreadRoot().getId());
                 Map<String, List<Long>> byType = toTypeMap(nodes);
-                for(String t : byType.keySet()) {
+                for (String t : byType.keySet()) {
                     NodeType nodeType = AbstractTree.getNodeType(t);
                     namedUpdateQuery("delete from " + nodeType.getNodeClass().getSimpleName() + " n where n.id in (:nodes)", "nodes", byType.get(nodeType));
                 }
@@ -93,11 +99,11 @@ public class JPATreeStorage extends TreeStorage {
 
     private Map<String, List<Long>> toTypeMap(List<Object[]> nodes) {
         Map<String, List<Long>> nodesByType = new HashMap<String, List<Long>>();
-        for(Object[] pair : nodes) {
+        for (Object[] pair : nodes) {
             Long nid = (Long) pair[0];
             String type = (String) pair[1];
             List<Long> ids = nodesByType.get(type);
-            if(ids == null) {
+            if (ids == null) {
                 ids = new ArrayList<Long>();
                 nodesByType.put(type, ids);
             }
@@ -109,21 +115,17 @@ public class JPATreeStorage extends TreeStorage {
     @Override
     public List<JSTreeNode> getChildren(Long parentObjectId, String treeId, String type) {
         if (parentObjectId == null || parentObjectId == -1) {
-            return TreeNode.find("from TreeNode n where n.treeId = '" + treeId + "' and n.threadRoot = n").<JSTreeNode>fetch();
+            return findJSTreeNodes("from TreeNode n where n.treeId = '" + treeId + "' and n.threadRoot = n");
         } else {
-            TreeNode parent = TreeNode.find(parentObjectId, type, treeId);
-            return getChildren(parent.getLevel(), parent.getPath(), parent.getThreadRoot(), treeId);
+            TreeNode parent = findTreeNode(parentObjectId, treeId, type);
+            return findJSTreeNodes("from TreeNode n where n.treeId = '" + treeId + "' and n.level = ? and n.path like ? and n.threadRoot = ?", parent.getLevel() + 1, parent.getPath() + "%", parent.getThreadRoot());
         }
-    }
-
-    public static List<JSTreeNode> getChildren(Integer parentLevel, String parentPath, TreeNode parentThreadRoot, String treeId) {
-        return TreeNode.find("from TreeNode n where n.treeId = '" + treeId + "' and n.level = ? and n.path like ? and n.threadRoot = ?", parentLevel + 1, parentPath + "%", parentThreadRoot).<JSTreeNode>fetch();
     }
 
     @Override
     public void rename(Long objectId, String name, String treeId, String type) {
 
-        TreeNode n = TreeNode.find(objectId, type, treeId);
+        TreeNode n = findTreeNode(objectId, treeId, type);
         n.setName(name);
         n.save();
 
@@ -136,9 +138,9 @@ public class JPATreeStorage extends TreeStorage {
 
     @Override
     public void move(Long objectId, String type, Long target, String targetType, String treeId) {
-        TreeNode node = TreeNode.find(objectId, type, treeId);
+        TreeNode node = findTreeNode(objectId, treeId, type);
         TreeNode oldParent = (TreeNode) node.getParent();
-        TreeNode parent = TreeNode.find(target, targetType, treeId);
+        TreeNode parent = findTreeNode(target, treeId, targetType);
 
         String newPath = parent.getPath();
         Integer delta = parent.getLevel() - node.getLevel() + 1;
@@ -153,154 +155,35 @@ public class JPATreeStorage extends TreeStorage {
         }
     }
 
-
     @Override
     public void copy(Long id, Long target, boolean copyObject, NodeType[] types, String treeId) {
-        TreeNode node = TreeNode.find(id, treeId);
-        TreeNode parent = TreeNode.find(target, treeId );
-        Integer delta = parent.getLevel() - node.getLevel() + 1;
-        String oldPath = node.getPath();
-        String newPath = parent.getThreadRoot().getId().equals(parent.getId()) ? parent.getPath() + "___" : parent.getPath(); // FIXME "___"
+        // TODO implement
+        throw new RuntimeException("not implemented");
+    }
 
-        // at this point we do not know yet what will be the ID of the newly inserted rows so we have to update the path afterwards with the correct ID
-        // in order to identify which rows need to be updated, we prepend a unique transaction ID to the path
-        String copyTransactionId = System.currentTimeMillis() + "###" + id + "###";
-        newPath = copyTransactionId + newPath;
-
-        Integer oldPathLength = node.getParent().getPath().length();
-        String pathLike = oldPath + "%";
-
-        // see http://opensource.atlassian.com/projects/hibernate/browse/HHH-2692
-//            Query query = JPA.em().createQuery("insert into TreeNode (name, type, opened, level, path, threadRoot, abstractNode) " +
-//                    "select c.name, c.type, c.opened, c.level + :delta, concat(:newPath, substring(path, :oldPathLength, length(path))), (select :newThreadRoot from AbstractNode), c.abstractNode " +
-//                    "from TreeNode c " +
-//                    "where c.threadRoot = :oldThreadRoot and c.path like :pathLike");
-//            query.setParameter("delta", delta);
-//            query.setParameter("newPath", newPath);
-//            query.setParameter("oldPathLength", oldPathLength + 1);
-//            query.setParameter("newThreadRoot", parent.getThreadRoot());
-//            query.setParameter("oldThreadRoot", node.getThreadRoot());
-//            query.setParameter("pathLike", pathLike);
-
-        Query query = JPA.em().createNativeQuery("insert into TreeNode (name, type, opened, level, path, threadRoot_id, abstractNode_id) " +
-                "select c.name, c.type, c.opened, c.level + ?, concat(?, substring(path, ?, length(path))), ?, c.abstractNode_id " +
-                "from TreeNode c " +
-                "where c.threadRoot_id = ? and c.path like ? and c.treeId = ?");
-        query.setParameter(1, delta);
-        query.setParameter(2, newPath);
-        query.setParameter(3, oldPathLength + 1);
-        query.setParameter(4, parent.getThreadRoot().getId());
-        query.setParameter(5, node.getThreadRoot().getId());
-        query.setParameter(6, pathLike);
-        query.setParameter(7, treeId);
-
-        query.executeUpdate();
-
-
-        // FIXME recompute the paths per level
-        // fetch the IDs for each level (until max(level) where path startsWith copyTransactionId)
-        // for each level
-        //   path = path(level -1) + id where path startsWith copyTransactionId
-        // remove copyTransactionId
-        /*
-        Map<Integer, List<Long>> nodes = new HashMap<Integer, List<Long>>();
-        Query toUpdate = JPA.em().createNativeQuery("select n.level, n.id from TreeNode n where n.level like ? order by level asc");
-        toUpdate.setParameter(1, copyTransactionId + "%");
-        List<Object[]> toUpdateIds = (List<Object[]>) toUpdate.getResultList();
-        for(Object[] levelIds : toUpdateIds) {
-            Integer level = (Integer) levelIds[0];
-            List<Long> ids = nodes.get(level);
-            if(ids == null) {
-                ids = new ArrayList<Long>();
-                nodes.put(level, ids);
-            }
-            ids.add((Long)levelIds[1]);
-        }
-        Integer max = query("select max(level) from TreeNode n where n.path like ? group by n.level", Integer.class, copyTransactionId + "%");
-        String parentPath = parent.getPath() + "___";
-        for(int i = 0; id < max; i++) {
-            
-            updateQuery("update TreeNode set path = substring(concat(?, id), ?) where path like ?", parentPath, copyTransactionId.length() + 1, copyTransactionId);
-
-        }
-        */
-
-        // now, update the paths that are for the moment incorrect
-        Query pathQuery = JPA.em().createNativeQuery("update TreeNode set path = concat(substring(path, ?, length(path) - ? - locate('___', reverse(path)) + 1), id) where path like ? and treeId = ?");
-        pathQuery.setParameter(1, copyTransactionId.length() + 1);
-        pathQuery.setParameter(2, copyTransactionId.length());
-        pathQuery.setParameter(3, copyTransactionId + "%");
-        pathQuery.setParameter(4, treeId);
-        pathQuery.executeUpdate();
-
-        if (copyObject) {
-            // fetch all (type, (AbstractNode, TreeNode)) where TreeNode-s are the freshly copied nodes (they still point to the original AbstractNode)
-            Map<String, Map<Long, Long>> nodeIdsByType = new HashMap<String, Map<Long, Long>>();
-            Query copied = JPA.em().createNativeQuery("select n.type, n.abstractNode_id, n.id from TreeNode n join TreeNode o where n.abstractNode_id = o.abstractNode_id and n.id <> o.id and n.path not like ?");
-            copied.setParameter(1, pathLike);
-            List<Object[]> ids = (List<Object[]>) copied.getResultList();
-            for (Object[] p : ids) {
-                String type = (String) p[0];
-                Map<Long, Long> i = nodeIdsByType.get(type);
-                if (i == null) {
-                    i = new HashMap<Long, Long>();
-                    nodeIdsByType.put(type, i);
-                }
-                i.put(((BigInteger) p[1]).longValue(), ((BigInteger) p[2]).longValue());
-            }
-
-            // with the inheritance strategy in use we have no choice but to copy the concrete nodes by hand using reflection
-            for (NodeType type : types) {
-                Map<Long, Long> copyIds = new HashMap<Long, Long>();
-                Map<Long, Long> i = nodeIdsByType.get(type.getName());
-                if (i != null) {
-                    try {
-                        Query q = JPA.em().createQuery("from " + type.getNodeClass().getSimpleName() + " n where n.id in (:ids)");
-                        q.setParameter("ids", i.keySet());
-                        List<AbstractNode> original = q.getResultList();
-                        for (AbstractNode n : original) {
-                            AbstractNode copy = (AbstractNode) n.clone();
-                            copy.id = null;
-                            copy.create();
-                            copyIds.put(i.get(n.getId()), copy.getId());
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    // TODO see if this can be optimized
-                    for (Long tn : copyIds.values()) {
-                        updateQuery("update TreeNode set abstractNode = (select a.id from AbstractNode a where a.id = ?) where id = ?", copyIds.get(tn), tn);
-                    }
-                }
-            }
+    @Override
+    public void renameTreeNodes(String name, String type, Long nodeId, String treeId) {
+        List<TreeNode> treeNodes = findTreeNodes("from TreeNode n where n.type = ? and n.nodeId = ? and n.treeId = ?", type, nodeId, treeId);
+        for (TreeNode n : treeNodes) {
+            n.name = name;
+            n.save();
         }
     }
 
-    private <T> T query(String query, Object id, Class<T> type) {
-        Query q = JPA.em().createQuery(query);
-        q.setParameter("id", id);
-        return (T) q.getSingleResult();
+    private TreeNode findTreeNode(Long nodeId, String treeId, String type) {
+        return (TreeNode) JPA.em().createQuery(transform("select n from TreeNode n where nodeId = :nodeId and type = :type and treeId = :treeId")).setParameter("nodeId", nodeId).setParameter("treeId", treeId).setParameter("type", type).getSingleResult();
     }
 
-    private <T> T query(String query, Class<T> type, Object... args) {
-        Query q = JPA.em().createQuery(query);
-        for (int i = 0; i < args.length; i++) {
-            q.setParameter(i + 1, args[i]);
-        }
-        List r = q.getResultList();
-        if (r.isEmpty()) return null;
-        return (T) r.get(0);
+    private List<TreeNode> findTreeNodes(String query, Object... arguments) {
+        return queryList(query, arguments);
     }
 
-
-    private <T> List<T> queryList(String query, Object id, Class<T> type) {
-        Query q = JPA.em().createQuery(query);
-        q.setParameter("id", id);
-        return (List<T>) q.getResultList();
+    private List<JSTreeNode> findJSTreeNodes(String query, Object... arguments) {
+        return queryList(query, arguments);
     }
 
-    private <T> List<T> queryList(String query, Class<T> type, Object... args) {
-        Query q = JPA.em().createQuery(query);
+    private <T> List<T> queryList(String query, Object... args) {
+        Query q = JPA.em().createQuery(transform(query));
         for (int i = 0; i < args.length; i++) {
             q.setParameter(i + 1, args[i]);
         }
@@ -309,7 +192,7 @@ public class JPATreeStorage extends TreeStorage {
 
 
     private void updateQuery(String query, Object... args) {
-        Query q = JPA.em().createQuery(query);
+        Query q = JPA.em().createQuery(transform(query));
         for (int i = 0; i < args.length; i++) {
             q.setParameter(i + 1, args[i]);
         }
@@ -317,8 +200,22 @@ public class JPATreeStorage extends TreeStorage {
     }
 
     private void namedUpdateQuery(String query, String argName, Object arg) {
-        Query q = JPA.em().createQuery(query);
+        Query q = JPA.em().createQuery(transform(query));
         q.setParameter(argName, arg);
         q.executeUpdate();
+    }
+
+
+    /**
+     * Transforms the query to use an alternate TreeNode class name, if necessary
+     *
+     * @param query the query to transform
+     * @return a modified query string in which all occurences of "TreeNode" have been replaced with the name of the alternate TreeNode subclass
+     */
+    private String transform(String query) {
+        if (!treeNodeClass.equals(TreeNode.class)) {
+            return query.replaceAll("TreeNode", treeNodeClass.getSimpleName());
+        }
+        return query;
     }
 }

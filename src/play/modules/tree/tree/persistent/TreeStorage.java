@@ -11,18 +11,52 @@ import tree.JSTreeNode;
  */
 public abstract class TreeStorage {
 
+    /**
+     * Persists a Node object
+     *
+     * @param node the attached {@link Node}
+     * @return the persisted {@link Node} instance
+     */
+    public abstract Node persistObject(Node node);
 
-    public abstract Node createObject(Node node);
-
+    /**
+     * Updates a Node object
+     *
+     * @param node the attached {@link Node}
+     * @return the updated {@link Node} instance
+     */
     public abstract Node updateObject(Node node);
 
+    /**
+     * Returns a new instance of a tree node
+     *
+     * @return a new instance of a {@link GenericTreeNode}
+     */
     public abstract GenericTreeNode getNewTreeNode();
 
-    public abstract GenericTreeNode createTreeNode(GenericTreeNode node);
+    /**
+     * Persists a new tree node
+     *
+     * @return the persisted {@link GenericTreeNode} instance
+     */
+    public abstract GenericTreeNode persistTreeNode(GenericTreeNode node);
 
+    /**
+     * Updates a tree node
+     *
+     * @return the updated {@link GenericTreeNode} instance
+     */
     public abstract GenericTreeNode updateTreeNode(GenericTreeNode node);
 
-    public abstract GenericTreeNode getTreeNode(Long id, String type, String treeId);
+    /**
+     * Retrieves a tree node
+     *
+     * @param nodeId the ID of the attached {@link Node}
+     * @param type   the type of the attached {@link Node}
+     * @param treeId the identifier of the tree this TreeNode belongs to
+     * @return a {@link GenericTreeNode}
+     */
+    public abstract GenericTreeNode getTreeNode(Long nodeId, String type, String treeId);
 
     public abstract List<JSTreeNode> getChildren(Long parentId, String treeId, String type);
 
@@ -33,6 +67,15 @@ public abstract class TreeStorage {
     public abstract void move(Long id, String type, Long target, String targetType, String treeId);
 
     public abstract void copy(Long id, Long target, boolean copyObject, NodeType[] objectTypes, String treeId);
+
+    /**
+     * Renames all the GenericTreeNode-s for a given {@link Node} identifier and type
+     * @param name the new name
+     * @param type the type of the {@link tree.persistent.Node}
+     * @param nodeId the ID of the {@link tree.persistent.Node}
+     * @param treeId the ID of the tree
+     */
+    public abstract void renameTreeNodes(String name, String type, Long nodeId, String treeId);
 
     /**
      * Compues the path of a TreeNode. The rules for creating the path need to be the same everywhere.
@@ -52,6 +95,4 @@ public abstract class TreeStorage {
         path += id;
         return path;
     }
-
-
 }

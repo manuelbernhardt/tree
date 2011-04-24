@@ -45,7 +45,7 @@ public class NodeEnhancer extends Enhancer {
                 try {
                     // we trust that we'll always find this because otherwise the PropertyEnhancer of Play would already have complained
                     CtMethod ctMethod = ctClass.getDeclaredMethod(setter);
-                    ctMethod.insertBefore("models.tree.jpa.TreeNode.rename($0, $1);");
+                    ctMethod.insertBefore("tree.persistent.AbstractTree.renameNode($0, $1);");
 
                 } catch (NotFoundException noSetter) {
                     throw new NotFoundException("Could not find setter for property " + propertyName + " of Node class " + applicationClass.name);

@@ -9,6 +9,8 @@ public class NodeType {
 
     private String name;
 
+    private AbstractTree tree;
+
     private boolean container;
 
     private Class<? extends Node> nodeClass;
@@ -25,8 +27,13 @@ public class NodeType {
         return container;
     }
 
-    public NodeType(String name, boolean isContainer, Class<? extends Node> nodeClass) {
+    public AbstractTree getTree() {
+        return tree;
+    }
+
+    public NodeType(String name, boolean isContainer, Class<? extends Node> nodeClass, AbstractTree tree) {
         this.name = name;
+        this.tree = tree;
         this.container = isContainer;
         this.nodeClass = nodeClass;
     }

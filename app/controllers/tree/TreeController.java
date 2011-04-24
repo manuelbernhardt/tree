@@ -7,9 +7,11 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import models.tree.jpa.TreeNode;
-import tree.JSTreeNode;
+import play.Play;
+import play.classloading.ApplicationClasses;
 import play.mvc.Controller;
 import play.mvc.Util;
+import tree.JSTreeNode;
 import tree.TreePlugin;
 import tree.persistent.GenericTreeNode;
 import tree.simple.SimpleNode;
@@ -119,10 +121,14 @@ public class TreeController extends Controller {
             final JSTreeNodeSerializer serializer = new JSTreeNodeSerializer();
 
             // workaround for gson not being smart enough (yet) to figure out type inheritance
+            // TODO it does support it now (see http://google-gson.googlecode.com/svn/trunk/gson/docs/javadocs/com/google/gson/GsonBuilder.html#registerTypeHierarchyAdapter(java.lang.Class, java.lang.Object))
+            // TODO file ticket for Play! lib update
             builder.registerTypeAdapter(JSTreeNode.class, serializer);
             builder.registerTypeAdapter(GenericTreeNode.class, serializer);
-            builder.registerTypeAdapter(TreeNode.class, serializer);
             builder.registerTypeAdapter(SimpleNode.class, serializer);
+            for(ApplicationClasses.ApplicationClass applicationClass : Play.classes.getAssignableClasses(TreeNode.class)) {
+                builder.registerTypeAdapter(applicationClass.javaClass, serializer);
+            }
 
             gson = builder.create();
         }

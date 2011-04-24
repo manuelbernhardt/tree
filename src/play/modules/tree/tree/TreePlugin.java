@@ -3,6 +3,7 @@ package tree;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,7 +46,7 @@ public class TreePlugin extends PlayPlugin {
         // initialize all trees
         List<ApplicationClasses.ApplicationClass> trees = Play.classes.getAssignableClasses(TreeDataHandler.class);
         for (ApplicationClasses.ApplicationClass tree : trees) {
-            if (!tree.javaClass.getName().equals("tree.persistent.AbstractTree")) {
+            if (!Modifier.isAbstract(tree.javaClass.getModifiers())) {
                 try {
                     Constructor c = tree.javaClass.getDeclaredConstructor();
                     TreeDataHandler t = (TreeDataHandler) c.newInstance();
@@ -105,10 +106,9 @@ public class TreePlugin extends PlayPlugin {
                 String nameField = nameFields.get(0);
                 Class<?> treeNode = Play.classloader.loadApplicationClass("models.tree.jpa.TreeNode");
                 try {
-                    Method rename = treeNode.getMethod("rename", Node.class, String.class);
                     Method nameGetter = context.getClass().getMethod("get" + JavaExtensions.capFirst(nameField));
                     String name = (String) nameGetter.invoke(context);
-                    Java.invokeStatic(rename, new Object[]{node, name});
+                    AbstractTree.renameNode(node, name);
                 } catch (NoSuchMethodException e) {
                     e.printStackTrace();
                 } catch (Exception e) {

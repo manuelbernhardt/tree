@@ -19,21 +19,10 @@ import tree.TreePlugin;
  */
 public abstract class AbstractTree implements TreeDataHandler {
 
-    private static TreeStorage jpaTreeStorage;
-
-    static {
-        Class<?> storage = Play.classloader.loadApplicationClass("controllers.tree.JPATreeStorage");
-        try {
-            jpaTreeStorage = (TreeStorage) storage.newInstance();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-    }
-
     protected static Map<String, NodeType> nodeTypes = new HashMap<String, NodeType>();
     protected static Map<Class, NodeType> nodeTypesByClass = new HashMap<Class, NodeType>();
+
+    private TreeStorage storage;
 
     /**
      * Registers a new {@link NodeType}. This method should be used when implementing {@link #getNodes()}
@@ -42,9 +31,9 @@ public abstract class AbstractTree implements TreeDataHandler {
      * @param isContainer whether this node can be a container of other nodes (i.e. a non-leaf node)
      * @return a registered {@link NodeType}
      */
-    public static NodeType type(Class<? extends Node> nodeClass, boolean isContainer) {
+    public NodeType type(Class<? extends Node> nodeClass, boolean isContainer) {
         String name = nodeClass.getSimpleName().substring(0, 1).toLowerCase() + nodeClass.getSimpleName().substring(1);
-        NodeType nodeType = new NodeType(name, isContainer, nodeClass);
+        NodeType nodeType = new NodeType(name, isContainer, nodeClass, this);
         nodeTypes.put(name, nodeType);
         nodeTypesByClass.put(nodeClass, nodeType);
         return nodeType;
@@ -59,13 +48,23 @@ public abstract class AbstractTree implements TreeDataHandler {
     }
 
     public void init() {
+        storage = getStorage();
         getRootType();
         getNodes();
     }
 
-    // one day someone may come and want to implement another storage
-    // until then we keep things simple
-    private TreeStorage storage = jpaTreeStorage;
+    protected TreeStorage getStorage() {
+        TreeStorage storage = null;
+        Class<?> storageClass = Play.classloader.loadApplicationClass("controllers.tree.JPATreeStorage");
+        try {
+            storage = (TreeStorage) storageClass.newInstance();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return storage;
+    }
 
     /**
      * The qualifier for this tree. By default, it is the classname starting with a lowercase.
@@ -152,13 +151,13 @@ public abstract class AbstractTree implements TreeDataHandler {
         try {
             GenericTreeNode node = storage.getNewTreeNode();
             populateTreeNode(node, parentId, parentType, name, nt, this.getName());
-            node = storage.createTreeNode(node);
+            node = storage.persistTreeNode(node);
 
             Node object = createObjectNode(name, nt, args);
             if (object == null) {
                 throw new RuntimeException(String.format("New instance for node '%s' of type '%s' is null", name, nt.getName()));
             }
-            object = storage.createObject(object);
+            object = storage.persistObject(object);
 
             node.setNodeId(object.getId());
 
@@ -197,6 +196,26 @@ public abstract class AbstractTree implements TreeDataHandler {
         return true;
     }
 
+    /**
+     * Renames all TreeNode-s bound to a given Node
+     *
+     * @param object the Node object to rename
+     * @param name   the new name
+     */
+    public void rename(Node object, String name) {
+        if (name == null) {
+            return;
+        }
+        NodeType type = getNodeType(object.getClass());
+        // may happen before the tree is initialized.
+        if (type != null) {
+            storage.renameTreeNodes(name, type.getName(), object.getId(), this.getName());
+        }
+    }
+
+    public static void renameNode(Node object, String name) {
+        AbstractTree.getNodeType(object.getClass()).getTree().rename(object, name);
+    }
 
     /**
      * Creates a new instance of a {@link Node}. By default, this method uses reflection. Override it you need to do more complicated things.
@@ -226,7 +245,7 @@ public abstract class AbstractTree implements TreeDataHandler {
 
     private void renameObject(Node object, String name) {
         List<String> nameFields = TreePlugin.findNameFields(object);
-        for(String field : nameFields) {
+        for (String field : nameFields) {
             try {
                 Method setter = object.getClass().getMethod("set" + field.substring(0, 1).toUpperCase() + field.substring(1), String.class);
                 setter.invoke(object, name);

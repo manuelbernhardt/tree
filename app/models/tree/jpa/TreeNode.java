@@ -10,13 +10,12 @@ import javax.persistence.PostLoad;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 
-import controllers.tree.JPATreeStorage;
+import play.db.jpa.JPA;
+import play.db.jpa.Model;
+import tree.JSTreeNode;
 import tree.persistent.AbstractTree;
 import tree.persistent.GenericTreeNode;
-import tree.JSTreeNode;
 import tree.persistent.NodeType;
-import tree.persistent.Node;
-import play.db.jpa.Model;
 
 /**
  * TODO optimize this table (indexes)
@@ -82,7 +81,7 @@ public class TreeNode extends Model implements GenericTreeNode {
     }
 
     public List<JSTreeNode> getChildren() {
-        return JPATreeStorage.getChildren(level, path, threadRoot, treeId);
+        return JPA.em().createQuery("from TreeNode n where n.treeId = '" + treeId + "' and n.level = :level and n.path like :pathLike and n.threadRoot = :threadRoot").setParameter("level", level + 1).setParameter("pathLike", path + "%").setParameter("threadRoot", threadRoot).getResultList();
     }
 
     public boolean isOpen() {
@@ -137,32 +136,4 @@ public class TreeNode extends Model implements GenericTreeNode {
     public void doLoad() {
         this.nodeType = AbstractTree.getNodeType(this.type);
     }
-
-    public static TreeNode find(Long id, String treeId) {
-        return TreeNode.find("from TreeNode n where id = ? and treeId = ?", id, treeId).<TreeNode>first();
-    }
-
-    public static TreeNode find(Long objectId, String type, String treeId) {
-        return TreeNode.find("from TreeNode n where nodeId = ? and type = ? and treeId = ?", objectId, type, treeId).<TreeNode>first();
-    }
-
-    public static TreeNode findById(Long id) {
-        throw new RuntimeException("Use find(id, treeId)");
-    }
-
-    public static void rename(Node object, String name) {
-        if(name == null) {
-            return;
-        }
-        NodeType type = AbstractTree.getNodeType(object.getClass());
-        // may happen before the tree is initialized.
-        if(type != null) {
-            List<TreeNode> treeNodes = TreeNode.find("from TreeNode n where n.type = ? and n.nodeId = ?", type.getName(), object.getId()).<TreeNode>fetch();
-            for(TreeNode n : treeNodes) {
-                n.name = name;
-                n.save();
-            }
-        }
-    }
-
 }
