@@ -8,7 +8,6 @@ import javax.persistence.Query;
 
 import models.tree.jpa.TreeNode;
 import play.db.jpa.JPA;
-import play.db.jpa.JPABase;
 import play.db.jpa.Model;
 import tree.JSTreeNode;
 import tree.persistent.AbstractTree;
@@ -27,13 +26,13 @@ import tree.persistent.TreeStorage;
  */
 public class JPATreeStorage extends TreeStorage {
 
-    private final Class<? extends TreeNode> treeNodeClass;
+    private final Class<? extends GenericTreeNode> treeNodeClass;
 
     public JPATreeStorage() {
         this.treeNodeClass = TreeNode.class;
     }
 
-    public JPATreeStorage(Class<? extends TreeNode> treeNodeClass) {
+    public JPATreeStorage(Class<? extends GenericTreeNode> treeNodeClass) {
         this.treeNodeClass = treeNodeClass;
     }
 
@@ -67,13 +66,12 @@ public class JPATreeStorage extends TreeStorage {
 
     @Override
     public GenericTreeNode getTreeNode(Long nodeId, String type, String treeId) {
-        JPABase node = findTreeNode(nodeId, treeId, type);
-        return (GenericTreeNode) node;
+        return findTreeNode(nodeId, treeId, type);
     }
 
     @Override
     public void remove(Long id, boolean removeObject, String treeId, String type) {
-        TreeNode parent = findTreeNode(id, treeId, type);
+        GenericTreeNode parent = findTreeNode(id, treeId, type);
 
         String pathLike = parent.getPath() + "%";
         List<Long> kids = queryList("select n.id from TreeNode n where n.treeId = ? and n.path like ? and n.level > ? and n.threadRoot.id = ? order by n.path desc", treeId, pathLike, parent.getLevel(), parent.getThreadRoot().getId());
@@ -117,7 +115,7 @@ public class JPATreeStorage extends TreeStorage {
         if (parentObjectId == null || parentObjectId == -1) {
             return findJSTreeNodes("from TreeNode n where n.treeId = '" + treeId + "' and n.threadRoot = n");
         } else {
-            TreeNode parent = findTreeNode(parentObjectId, treeId, type);
+            GenericTreeNode parent = findTreeNode(parentObjectId, treeId, type);
             return findJSTreeNodes("from TreeNode n where n.treeId = '" + treeId + "' and n.level = ? and n.path like ? and n.threadRoot = ?", parent.getLevel() + 1, parent.getPath() + "%", parent.getThreadRoot());
         }
     }
@@ -125,9 +123,9 @@ public class JPATreeStorage extends TreeStorage {
     @Override
     public void rename(Long objectId, String name, String treeId, String type) {
 
-        TreeNode n = findTreeNode(objectId, treeId, type);
+        GenericTreeNode n = findTreeNode(objectId, treeId, type);
         n.setName(name);
-        n.save();
+        ((Model)n).save();
 
         // TODO this assumes there is a "name" field, whereas:
         // 1) it may be named differently
@@ -138,9 +136,9 @@ public class JPATreeStorage extends TreeStorage {
 
     @Override
     public void move(Long objectId, String type, Long target, String targetType, String treeId) {
-        TreeNode node = findTreeNode(objectId, treeId, type);
-        TreeNode oldParent = (TreeNode) node.getParent();
-        TreeNode parent = findTreeNode(target, treeId, targetType);
+        GenericTreeNode node = findTreeNode(objectId, treeId, type);
+        GenericTreeNode oldParent = node.getParent();
+        GenericTreeNode parent = findTreeNode(target, treeId, targetType);
 
         String newPath = parent.getPath();
         Integer delta = parent.getLevel() - node.getLevel() + 1;
@@ -163,18 +161,18 @@ public class JPATreeStorage extends TreeStorage {
 
     @Override
     public void renameTreeNodes(String name, String type, Long nodeId, String treeId) {
-        List<TreeNode> treeNodes = findTreeNodes("from TreeNode n where n.type = ? and n.nodeId = ? and n.treeId = ?", type, nodeId, treeId);
-        for (TreeNode n : treeNodes) {
-            n.name = name;
-            n.save();
+        List<GenericTreeNode> treeNodes = findTreeNodes("from TreeNode n where n.type = ? and n.nodeId = ? and n.treeId = ?", type, nodeId, treeId);
+        for (GenericTreeNode n : treeNodes) {
+            n.setName(name);
+            ((Model)n).save();
         }
     }
 
-    private TreeNode findTreeNode(Long nodeId, String treeId, String type) {
-        return (TreeNode) JPA.em().createQuery(transform("select n from TreeNode n where nodeId = :nodeId and type = :type and treeId = :treeId")).setParameter("nodeId", nodeId).setParameter("treeId", treeId).setParameter("type", type).getSingleResult();
+    private GenericTreeNode findTreeNode(Long nodeId, String treeId, String type) {
+        return (GenericTreeNode) JPA.em().createQuery(transform("select n from TreeNode n where nodeId = :nodeId and type = :type and treeId = :treeId")).setParameter("nodeId", nodeId).setParameter("treeId", treeId).setParameter("type", type).getSingleResult();
     }
 
-    private List<TreeNode> findTreeNodes(String query, Object... arguments) {
+    private List<GenericTreeNode> findTreeNodes(String query, Object... arguments) {
         return queryList(query, arguments);
     }
 

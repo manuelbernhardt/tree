@@ -6,7 +6,6 @@ import java.util.Map;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import models.tree.jpa.TreeNode;
 import play.Play;
 import play.classloading.ApplicationClasses;
 import play.mvc.Controller;
@@ -126,7 +125,7 @@ public class TreeController extends Controller {
             builder.registerTypeAdapter(JSTreeNode.class, serializer);
             builder.registerTypeAdapter(GenericTreeNode.class, serializer);
             builder.registerTypeAdapter(SimpleNode.class, serializer);
-            for(ApplicationClasses.ApplicationClass applicationClass : Play.classes.getAssignableClasses(TreeNode.class)) {
+            for(ApplicationClasses.ApplicationClass applicationClass : Play.classes.getAssignableClasses(GenericTreeNode.class)) {
                 builder.registerTypeAdapter(applicationClass.javaClass, serializer);
             }
 
