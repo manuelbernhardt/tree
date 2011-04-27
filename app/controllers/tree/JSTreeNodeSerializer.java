@@ -10,8 +10,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-import models.tree.jpa.TreeNode;
 import tree.JSTreeNode;
+import tree.persistent.GenericTreeNode;
 
 /**
  * Serializer for JSTree nodes
@@ -57,9 +57,8 @@ public class JSTreeNodeSerializer implements JsonSerializer<JSTreeNode> {
 
     public Long getNodeId(JSTreeNode node) {
         Long id = node.getId();
-        // TODO this is a hack, implement & register a subclass that serializes TreeNode-s and overrides this method
-        if(node instanceof TreeNode) {
-            id = ((TreeNode)node).getNodeId();
+        if(node instanceof GenericTreeNode) {
+            id = ((GenericTreeNode)node).getNodeId();
         }
         return id;
     }
