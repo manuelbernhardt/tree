@@ -54,7 +54,7 @@ public abstract class TreeStorage {
      * @param nodeId the ID of the attached {@link Node}
      * @param type   the type of the attached {@link Node}
      * @param treeId the identifier of the tree this TreeNode belongs to
-     * @return a {@link GenericTreeNode}
+     * @return a {@link GenericTreeNode}, or <code>null</code> if no node with that ID was found
      */
     public abstract GenericTreeNode getTreeNode(Long nodeId, String type, String treeId);
 

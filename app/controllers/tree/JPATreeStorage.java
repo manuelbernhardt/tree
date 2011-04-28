@@ -169,7 +169,16 @@ public class JPATreeStorage extends TreeStorage {
     }
 
     private GenericTreeNode findTreeNode(Long nodeId, String treeId, String type) {
-        return (GenericTreeNode) JPA.em().createQuery(transform("select n from TreeNode n where nodeId = :nodeId and type = :type and treeId = :treeId")).setParameter("nodeId", nodeId).setParameter("treeId", treeId).setParameter("type", type).getSingleResult();
+        List<GenericTreeNode> node = JPA.em().createQuery(transform("select n from TreeNode n where nodeId = :nodeId and type = :type and treeId = :treeId")).setParameter("nodeId", nodeId).setParameter("treeId", treeId).setParameter("type", type).getResultList();
+        if(node.isEmpty()) {
+            return null;
+        } else {
+            if(node.size() == 1) {
+                return node.get(0);
+            } else {
+                throw new RuntimeException(String.format("Error: multiple tree nodes with the same id found, nodeId %s, treeId %s, type %s", nodeId, treeId, type));
+            }
+        }
     }
 
     private List<GenericTreeNode> findTreeNodes(String query, Object... arguments) {
