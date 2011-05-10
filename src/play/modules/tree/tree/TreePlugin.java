@@ -104,7 +104,6 @@ public class TreePlugin extends PlayPlugin {
             if (!nameFields.isEmpty()) {
                 // any of them will do, they all have the same value
                 String nameField = nameFields.get(0);
-                Class<?> treeNode = Play.classloader.loadApplicationClass("models.tree.jpa.TreeNode");
                 try {
                     Method nameGetter = context.getClass().getMethod("get" + JavaExtensions.capFirst(nameField));
                     String name = (String) nameGetter.invoke(context);
