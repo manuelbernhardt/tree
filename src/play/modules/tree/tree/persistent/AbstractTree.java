@@ -173,27 +173,19 @@ public abstract class AbstractTree implements TreeDataHandler {
     }
 
     public boolean rename(Long id, String name, String type) {
-        // TODO return false if error
-        storage.rename(id, name, getName(), type);
-        return true;
+        return storage.rename(id, name, getName(), type);
     }
 
     public boolean copy(Long id, Long target, Long position) {
-        // TODO return false if error
-        storage.copy(id, target, true, getNodes(), getName());
-        return true;
+        return storage.copy(id, target, true, getNodes(), getName());
     }
 
     public boolean move(Long id, String type, Long target, String targetType, Long position) {
-        // TODO return false if error
-        storage.move(id, type, target, targetType, getName());
-        return true;
+        return storage.move(id, type, target, targetType, getName());
     }
 
     public boolean remove(Long id, Long parentId, String type, Map<String, String> args) {
-        // TODO return false if error
-        storage.remove(id, isRemovalPropagated(), getName(), type);
-        return true;
+        return storage.remove(id, isRemovalPropagated(), getName(), type);
     }
 
     /**

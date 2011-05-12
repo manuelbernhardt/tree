@@ -60,13 +60,13 @@ public abstract class TreeStorage {
 
     public abstract List<JSTreeNode> getChildren(Long parentId, String treeId, String type);
 
-    public abstract void remove(Long id, boolean removeObject, String treeId, String type);
+    public abstract boolean remove(Long id, boolean removeObject, String treeId, String type);
 
-    public abstract void rename(Long id, String name, String treeId, String type);
+    public abstract boolean rename(Long id, String name, String treeId, String type);
 
-    public abstract void move(Long id, String type, Long target, String targetType, String treeId);
+    public abstract boolean move(Long id, String type, Long target, String targetType, String treeId);
 
-    public abstract void copy(Long id, Long target, boolean copyObject, NodeType[] objectTypes, String treeId);
+    public abstract boolean copy(Long id, Long target, boolean copyObject, NodeType[] objectTypes, String treeId);
 
     /**
      * Renames all the GenericTreeNode-s for a given {@link Node} identifier and type

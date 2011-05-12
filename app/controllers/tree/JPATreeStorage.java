@@ -70,29 +70,35 @@ public class JPATreeStorage extends TreeStorage {
     }
 
     @Override
-    public void remove(Long id, boolean removeObject, String treeId, String type) {
-        GenericTreeNode parent = findTreeNode(id, treeId, type);
+    public boolean remove(Long id, boolean removeObject, String treeId, String type) {
+        try {
+            GenericTreeNode parent = findTreeNode(id, treeId, type);
 
-        String pathLike = parent.getPath() + "%";
-        List<Long> kids = queryList("select n.id from TreeNode n where n.treeId = ? and n.path like ? and n.level > ? and n.threadRoot.id = ? order by n.path desc", treeId, pathLike, parent.getLevel(), parent.getThreadRoot().getId());
-        if (!kids.isEmpty()) {
-            if (removeObject) {
-                List<Object[]> nodes = queryList("select n.nodeId, n.type from TreeNode n where n.treeId = ? and n.path like ? and n.level > ? and n.threadRoot.id = ? order by n.type desc", treeId, pathLike, parent.getLevel(), parent.getThreadRoot().getId());
-                Map<String, List<Long>> byType = toTypeMap(nodes);
-                for (String t : byType.keySet()) {
-                    NodeType nodeType = AbstractTree.getNodeType(t);
-                    namedUpdateQuery("delete from " + nodeType.getNodeClass().getSimpleName() + " n where n.id in (:nodes)", "nodes", byType.get(nodeType));
+            String pathLike = parent.getPath() + "%";
+            List<Long> kids = queryList("select n.id from TreeNode n where n.treeId = ? and n.path like ? and n.level > ? and n.threadRoot.id = ? order by n.path desc", treeId, pathLike, parent.getLevel(), parent.getThreadRoot().getId());
+            if (!kids.isEmpty()) {
+                if (removeObject) {
+                    List<Object[]> nodes = queryList("select n.nodeId, n.type from TreeNode n where n.treeId = ? and n.path like ? and n.level > ? and n.threadRoot.id = ? order by n.type desc", treeId, pathLike, parent.getLevel(), parent.getThreadRoot().getId());
+                    Map<String, List<Long>> byType = toTypeMap(nodes);
+                    for (String t : byType.keySet()) {
+                        NodeType nodeType = AbstractTree.getNodeType(t);
+                        namedUpdateQuery("delete from " + nodeType.getNodeClass().getSimpleName() + " n where n.id in (:nodes)", "nodes", byType.get(nodeType));
+                    }
                 }
+                namedUpdateQuery("delete from TreeNode n where n.treeId = '" + treeId + "' and n.id in (:kids)", "kids", kids);
             }
-            namedUpdateQuery("delete from TreeNode n where n.treeId = '" + treeId + "' and n.id in (:kids)", "kids", kids);
-        }
 
-        if (removeObject) {
-            updateQuery("delete from " + parent.getNodeType().getNodeClass().getSimpleName() + " n where n.id = ?", parent.getNodeId());
-        }
+            if (removeObject) {
+                updateQuery("delete from " + parent.getNodeType().getNodeClass().getSimpleName() + " n where n.id = ?", parent.getNodeId());
+            }
 
-        updateQuery("update TreeNode n set n.threadRoot = null where n.treeId = '" + treeId + "' and n.id = ?", parent.getId());
-        updateQuery("delete from TreeNode n where n.treeId = '" + treeId + "' and n.id = ?", parent.getId());
+            updateQuery("update TreeNode n set n.threadRoot = null where n.treeId = '" + treeId + "' and n.id = ?", parent.getId());
+            updateQuery("delete from TreeNode n where n.treeId = '" + treeId + "' and n.id = ?", parent.getId());
+        } catch(Throwable t) {
+            t.printStackTrace();
+            return false;
+        }
+        return true;
     }
 
     private Map<String, List<Long>> toTypeMap(List<Object[]> nodes) {
@@ -121,40 +127,51 @@ public class JPATreeStorage extends TreeStorage {
     }
 
     @Override
-    public void rename(Long objectId, String name, String treeId, String type) {
+    public boolean rename(Long objectId, String name, String treeId, String type) {
+        try {
+            GenericTreeNode n = findTreeNode(objectId, treeId, type);
+            n.setName(name);
+            ((Model)n).save();
 
-        GenericTreeNode n = findTreeNode(objectId, treeId, type);
-        n.setName(name);
-        ((Model)n).save();
-
-        // TODO this assumes there is a "name" field, whereas:
-        // 1) it may be named differently
-        // 1) there may be more than one (though unlikely)
-        // use the @tree.persistent.NodeName annotation to figure out the fields (this needs to be done in the AbstractTree tough)
-        updateQuery("update " + n.getNodeType().getNodeClass().getSimpleName() + " n set n.name = ? where n.id = ?", name, n.getNodeId());
-    }
-
-    @Override
-    public void move(Long objectId, String type, Long target, String targetType, String treeId) {
-        GenericTreeNode node = findTreeNode(objectId, treeId, type);
-        GenericTreeNode oldParent = node.getParent();
-        GenericTreeNode parent = findTreeNode(target, treeId, targetType);
-
-        String newPath = parent.getPath();
-        Integer delta = parent.getLevel() - node.getLevel() + 1;
-
-        if (node.getThreadRoot().getId().equals(node.getId())) {
-            updateQuery("update TreeNode set path = concat(?, path), level = level + ? where n.treeId = '" + treeId + "' and threadRoot = ?", newPath + "____", delta, parent.getThreadRoot());
-        } else {
-            String oldPath = node.getPath();
-            Integer oldPathLength = oldParent.getPath().length();
-            String pathLike = oldPath + "%";
-            updateQuery("update TreeNode set path = concat(?, substring(path, ?, length(path))), level = level + ? where n.treeId = '" + treeId + "' and threadRoot = ? and path like ?", newPath, oldPathLength + 1, delta, parent.getThreadRoot(), pathLike);
+            // TODO this assumes there is a "name" field, whereas:
+            // 1) it may be named differently
+            // 1) there may be more than one (though unlikely)
+            // use the @tree.persistent.NodeName annotation to figure out the fields (this needs to be done in the AbstractTree tough)
+            updateQuery("update " + n.getNodeType().getNodeClass().getSimpleName() + " n set n.name = ? where n.id = ?", name, n.getNodeId());
+        } catch (Throwable t) {
+            t.printStackTrace();
+            return false;
         }
+        return true;
     }
 
     @Override
-    public void copy(Long id, Long target, boolean copyObject, NodeType[] types, String treeId) {
+    public boolean move(Long objectId, String type, Long target, String targetType, String treeId) {
+        try {
+            GenericTreeNode node = findTreeNode(objectId, treeId, type);
+            GenericTreeNode oldParent = node.getParent();
+            GenericTreeNode parent = findTreeNode(target, treeId, targetType);
+
+            String newPath = parent.getPath();
+            Integer delta = parent.getLevel() - node.getLevel() + 1;
+
+            if (node.getThreadRoot().getId().equals(node.getId())) {
+                updateQuery("update TreeNode set path = concat(?, path), level = level + ? where n.treeId = '" + treeId + "' and threadRoot = ?", newPath + "____", delta, parent.getThreadRoot());
+            } else {
+                String oldPath = node.getPath();
+                Integer oldPathLength = oldParent.getPath().length();
+                String pathLike = oldPath + "%";
+                updateQuery("update TreeNode set path = concat(?, substring(path, ?, length(path))), level = level + ? where n.treeId = '" + treeId + "' and threadRoot = ? and path like ?", newPath, oldPathLength + 1, delta, parent.getThreadRoot(), pathLike);
+            }
+        } catch(Throwable t) {
+            t.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public boolean copy(Long id, Long target, boolean copyObject, NodeType[] types, String treeId) {
         // TODO implement
         throw new RuntimeException("not implemented");
     }
