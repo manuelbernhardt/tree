@@ -8,6 +8,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import play.Play;
 import play.classloading.ApplicationClasses;
+import play.libs.F;
 import play.mvc.Controller;
 import play.mvc.Util;
 import tree.JSTreeNode;
@@ -30,13 +31,13 @@ public class TreeController extends Controller {
 
     @Util
     public static void createDirect(String treeId, Long parentId, String parentType, Long position, String name, String type, Map<String, String> args) {
-        Long objectId = TreePlugin.getTree(treeId).create(parentId, parentType, position, name, type, args);
+        F.Tuple<Long, String> node = TreePlugin.getTree(treeId).create(parentId, parentType, position, name, type, args);
         JsonObject status = null;
-        if (objectId == null) {
+        if (node == null) {
             status = makeStatus(0, null);
         } else {
-            status = makeStatus(1, objectId);
-            status.addProperty("rel", type);
+            status = makeStatus(1, node._1);
+            status.addProperty("rel", node._2);
         }
         renderJSON(status.toString());
     }

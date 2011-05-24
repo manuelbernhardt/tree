@@ -84,15 +84,16 @@ public abstract class TreeStorage {
      * @param id     the id of the node
      * @return a path composed of the concatenation of parent path and id
      */
-    public String computePath(GenericTreeNode parent, Long id) {
-        String path = "";
+    public String computePath(GenericTreeNode parent, Long id, String name) {
+        String path = null;
 
         // if it's not a null parent and if it's not a thread root
-        if (parent != null && parent.getId() != id) {
-            path += parent.getPath();
-            path += "___";
+        if (parent != null && !parent.getId().equals(id)) {
+            path = parent.getPath() + "/";
+        } else {
+            path = "/";
         }
-        path += id;
+        path += name;
         return path;
     }
 }

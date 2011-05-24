@@ -21,6 +21,7 @@ import tree.persistent.TreeStorage;
  * By default, the {@link TreeNode} class is used to store all information necessary for node manipulation (path, ...).
  * It is possible to make use of a subclass of TreeNode by using the constructor {@link JPATreeStorage#JPATreeStorage(Class<TreeNode) treeNodeClass}
  * FIXME copying trees is broken, the tree information (paths) need to be re-computed recursively when copying hierarchies.
+ * FIXME implement duplicate check on node creation
  *
  * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>
  */
@@ -131,6 +132,7 @@ public class JPATreeStorage extends TreeStorage {
         try {
             GenericTreeNode n = findTreeNode(objectId, treeId, type);
             n.setName(name);
+            n.setPath(computePath(n.getParent(), n.getId(), n.getName()));
             ((Model)n).save();
 
             // TODO this assumes there is a "name" field, whereas:
@@ -156,12 +158,13 @@ public class JPATreeStorage extends TreeStorage {
             Integer delta = parent.getLevel() - node.getLevel() + 1;
 
             if (node.getThreadRoot().getId().equals(node.getId())) {
-                updateQuery("update TreeNode set path = concat(?, path), level = level + ? where n.treeId = '" + treeId + "' and threadRoot = ?", newPath + "____", delta, parent.getThreadRoot());
+                // if we are a root node
+                updateQuery("update TreeNode set path = concat(?, path), level = level + ? where treeId = ? and threadRoot = ?", newPath, delta, treeId, parent.getThreadRoot());
             } else {
                 String oldPath = node.getPath();
                 Integer oldPathLength = oldParent.getPath().length();
                 String pathLike = oldPath + "%";
-                updateQuery("update TreeNode set path = concat(?, substring(path, ?, length(path))), level = level + ? where n.treeId = '" + treeId + "' and threadRoot = ? and path like ?", newPath, oldPathLength + 1, delta, parent.getThreadRoot(), pathLike);
+                updateQuery("update TreeNode set path = concat(?, substring(path, ?, length(path))), level = level + ? where treeId = ? and threadRoot = ? and path like ?", newPath, oldPathLength + 1, delta, treeId, parent.getThreadRoot(), pathLike);
             }
         } catch(Throwable t) {
             t.printStackTrace();
@@ -181,6 +184,7 @@ public class JPATreeStorage extends TreeStorage {
         List<GenericTreeNode> treeNodes = findTreeNodes("from TreeNode n where n.type = ? and n.nodeId = ? and n.treeId = ?", type, nodeId, treeId);
         for (GenericTreeNode n : treeNodes) {
             n.setName(name);
+            n.setPath(computePath(n.getParent(), n.getId(), n.getName()));
             ((Model)n).save();
         }
     }

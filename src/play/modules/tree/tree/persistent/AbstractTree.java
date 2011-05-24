@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import play.Play;
+import play.libs.F;
 import tree.JSTreeNode;
 import tree.TreeDataHandler;
 import tree.TreePlugin;
@@ -135,7 +136,7 @@ public abstract class AbstractTree implements TreeDataHandler {
         return storage.getChildren(parentId, getName(), type);
     }
 
-    public Long create(Long parentId, String parentType, Long position, String name, String type, Map<String, String> args) {
+    public F.Tuple<Long, String> create(Long parentId, String parentType, Long position, String name, String type, Map<String, String> args) {
         NodeType nt = null;
         if (type == null) {
             nt = getRootType();
@@ -162,10 +163,10 @@ public abstract class AbstractTree implements TreeDataHandler {
             node.setNodeId(object.getId());
 
             // compute only when we have an ID
-            node.setPath(storage.computePath(storage.getTreeNode(parentId, parentType, getName()), node.getId()));
+            node.setPath(storage.computePath(storage.getTreeNode(parentId, parentType, getName()), node.getId(), node.getName()));
             node = storage.updateTreeNode(node);
 
-            return object.getId();
+            return new F.Tuple<Long, String>(object.getId(), nt.getName());
         } catch (Exception e) {
             e.printStackTrace();
         }
