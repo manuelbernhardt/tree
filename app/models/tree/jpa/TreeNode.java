@@ -11,6 +11,7 @@ import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 
 import play.db.jpa.JPA;
+import play.db.jpa.JPABase;
 import play.db.jpa.Model;
 import tree.JSTreeNode;
 import tree.persistent.AbstractTree;
@@ -124,12 +125,11 @@ public class TreeNode extends Model implements GenericTreeNode {
         return type;
     }
 
-    @PreUpdate
-    @PrePersist
-    public void doSave() {
-        if (nodeType != null) {
-            this.type = nodeType.getName();
-        }
+
+    @Override
+    public JPABase save() {
+        this.type = nodeType.getName();
+        return super.save();
     }
 
     @PostLoad
