@@ -125,6 +125,11 @@ public class TreeNode extends Model implements GenericTreeNode {
         return type;
     }
 
+    @Override
+    public boolean create() {
+        this.type = nodeType.getName();
+        return super.create();
+    }
 
     @Override
     public JPABase save() {
