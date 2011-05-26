@@ -42,6 +42,13 @@ public abstract class TreeStorage {
     public abstract GenericTreeNode persistTreeNode(GenericTreeNode node);
 
     /**
+     * Checks if a node with the same definition already exists in the storage
+     * @param node the node to check the existance for
+     * @return <code>true</code> if a node with the same definition is already stored
+     */
+    public abstract boolean exists(GenericTreeNode node);
+
+    /**
      * Updates a tree node
      *
      * @return the updated {@link GenericTreeNode} instance
@@ -81,14 +88,14 @@ public abstract class TreeStorage {
      * Compues the path of a TreeNode. The rules for creating the path need to be the same everywhere.
      *
      * @param parent the parent of the node
-     * @param id     the id of the node
+     * @param node the node
      * @return a path composed of the concatenation of parent path and id
      */
-    public String computePath(GenericTreeNode parent, Long id, String name) {
+    public String computePath(GenericTreeNode parent, GenericTreeNode node, String name) {
         String path = null;
 
         // if it's not a null parent and if it's not a thread root
-        if (parent != null && !parent.getId().equals(id)) {
+        if (parent != null && !parent.equals(node)) {
             path = parent.getPath() + "/";
         } else {
             path = "/";

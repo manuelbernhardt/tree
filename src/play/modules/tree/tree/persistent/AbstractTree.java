@@ -152,6 +152,13 @@ public abstract class AbstractTree implements TreeDataHandler {
         try {
             GenericTreeNode node = storage.getNewTreeNode();
             populateTreeNode(node, parentId, parentType, name, nt, this.getName());
+            node.setPath(storage.computePath(storage.getTreeNode(parentId, parentType, getName()), node, node.getName()));
+
+            // uniqueness check
+            if(storage.exists(node)) {
+                return null;
+            }
+
             node = storage.persistTreeNode(node);
 
             Node object = createObjectNode(name, nt, args);
@@ -162,8 +169,6 @@ public abstract class AbstractTree implements TreeDataHandler {
 
             node.setNodeId(object.getId());
 
-            // compute only when we have an ID
-            node.setPath(storage.computePath(storage.getTreeNode(parentId, parentType, getName()), node.getId(), node.getName()));
             node = storage.updateTreeNode(node);
 
             return new F.Tuple<Long, String>(object.getId(), nt.getName());

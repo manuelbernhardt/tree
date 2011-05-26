@@ -50,6 +50,11 @@ public class JPATreeStorage extends TreeStorage {
     }
 
     @Override
+    public boolean exists(GenericTreeNode node) {
+        return findJSTreeNodes("from TreeNode n where n.path = ? and n.type = ? and n.treeId = ?", node.getPath(), node.getType(), node.getTreeId()).size() > 0;
+    }
+
+    @Override
     public Node persistObject(Node concrete) {
         ((Model) concrete).create();
         return concrete;
@@ -132,7 +137,7 @@ public class JPATreeStorage extends TreeStorage {
         try {
             GenericTreeNode n = findTreeNode(objectId, treeId, type);
             n.setName(name);
-            n.setPath(computePath(n.getParent(), n.getId(), n.getName()));
+            n.setPath(computePath(n.getParent(), n, n.getName()));
             ((Model)n).save();
 
             // TODO this assumes there is a "name" field, whereas:
@@ -184,7 +189,7 @@ public class JPATreeStorage extends TreeStorage {
         List<GenericTreeNode> treeNodes = findTreeNodes("from TreeNode n where n.type = ? and n.nodeId = ? and n.treeId = ?", type, nodeId, treeId);
         for (GenericTreeNode n : treeNodes) {
             n.setName(name);
-            n.setPath(computePath(n.getParent(), n.getId(), n.getName()));
+            n.setPath(computePath(n.getParent(), n, n.getName()));
             ((Model)n).save();
         }
     }
@@ -206,7 +211,7 @@ public class JPATreeStorage extends TreeStorage {
         return queryList(query, arguments);
     }
 
-    private List<JSTreeNode> findJSTreeNodes(String query, Object... arguments) {
+    protected List<JSTreeNode> findJSTreeNodes(String query, Object... arguments) {
         return queryList(query, arguments);
     }
 
