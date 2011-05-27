@@ -88,11 +88,15 @@ public class TreeController extends Controller {
             e.printStackTrace();
             success = false;
         }
+        JsonObject status = null;
         if(success) {
-            renderJSON(makeStatus(1, null).toString());
+            status = makeStatus(1, null);
+            status.addProperty("id", id);
+            status.addProperty("rel", type);
         } else {
-            renderJSON(makeStatus(0, null).toString());
+            status = makeStatus(0, null);
         }
+        renderJSON(status.toString());
     }
 
     public static void getChildren(String treeId, Long id, String type, Map<String, String> args) {
