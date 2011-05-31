@@ -194,7 +194,7 @@ public class JPATreeStorage extends TreeStorage {
         }
     }
 
-    private GenericTreeNode findTreeNode(Long nodeId, String treeId, String type) {
+    public GenericTreeNode findTreeNode(Long nodeId, String treeId, String type) {
         List<GenericTreeNode> node = JPA.em().createQuery(transform("select n from TreeNode n where nodeId = :nodeId and type = :type and treeId = :treeId")).setParameter("nodeId", nodeId).setParameter("treeId", treeId).setParameter("type", type).getResultList();
         if(node.isEmpty()) {
             return null;
@@ -207,15 +207,15 @@ public class JPATreeStorage extends TreeStorage {
         }
     }
 
-    private List<GenericTreeNode> findTreeNodes(String query, Object... arguments) {
+    public List<GenericTreeNode> findTreeNodes(String query, Object... arguments) {
         return queryList(query, arguments);
     }
 
-    protected List<JSTreeNode> findJSTreeNodes(String query, Object... arguments) {
+    public List<JSTreeNode> findJSTreeNodes(String query, Object... arguments) {
         return queryList(query, arguments);
     }
 
-    private <T> List<T> queryList(String query, Object... args) {
+    public <T> List<T> queryList(String query, Object... args) {
         Query q = JPA.em().createQuery(transform(query));
         for (int i = 0; i < args.length; i++) {
             q.setParameter(i + 1, args[i]);
@@ -223,8 +223,7 @@ public class JPATreeStorage extends TreeStorage {
         return (List<T>) q.getResultList();
     }
 
-
-    private void updateQuery(String query, Object... args) {
+    public void updateQuery(String query, Object... args) {
         Query q = JPA.em().createQuery(transform(query));
         for (int i = 0; i < args.length; i++) {
             q.setParameter(i + 1, args[i]);
@@ -232,7 +231,7 @@ public class JPATreeStorage extends TreeStorage {
         q.executeUpdate();
     }
 
-    private void namedUpdateQuery(String query, String argName, Object arg) {
+    public void namedUpdateQuery(String query, String argName, Object arg) {
         Query q = JPA.em().createQuery(transform(query));
         q.setParameter(argName, arg);
         q.executeUpdate();
@@ -245,9 +244,9 @@ public class JPATreeStorage extends TreeStorage {
      * @param query the query to transform
      * @return a modified query string in which all occurences of "TreeNode" have been replaced with the name of the alternate TreeNode subclass
      */
-    private String transform(String query) {
+    protected String transform(String query) {
         if (!treeNodeClass.equals(TreeNode.class)) {
-            return query.replaceAll("TreeNode", treeNodeClass.getSimpleName());
+            return query.replaceAll("\\bTreeNode\\b", treeNodeClass.getSimpleName());
         }
         return query;
     }
