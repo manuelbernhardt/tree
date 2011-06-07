@@ -51,7 +51,7 @@ public class JPATreeStorage extends TreeStorage {
 
     @Override
     public boolean exists(GenericTreeNode node) {
-        return findJSTreeNodes("from TreeNode n where n.path = ? and n.type = ? and n.treeId = ?", node.getPath(), node.getType(), node.getTreeId()).size() > 0;
+        return findJSTreeNodes("from TreeNode n where n.path = ? and n.type = ? and n.treeId = ?", node.getPath(), node.getNodeType().getName(), node.getTreeId()).size() > 0;
     }
 
     @Override
