@@ -3,6 +3,7 @@ package controllers.tree;
 import java.util.List;
 import java.util.Map;
 
+import apple.laf.JRSUIConstants;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -123,17 +124,7 @@ public class TreeController extends Controller {
         if (gson == null) {
             final GsonBuilder builder = new GsonBuilder();
             final JSTreeNodeSerializer serializer = new JSTreeNodeSerializer();
-
-            // workaround for gson not being smart enough (yet) to figure out type inheritance
-            // TODO it does support it now (see http://google-gson.googlecode.com/svn/trunk/gson/docs/javadocs/com/google/gson/GsonBuilder.html#registerTypeHierarchyAdapter(java.lang.Class, java.lang.Object))
-            // TODO file ticket for Play! lib update
-            builder.registerTypeAdapter(JSTreeNode.class, serializer);
-            builder.registerTypeAdapter(GenericTreeNode.class, serializer);
-            builder.registerTypeAdapter(SimpleNode.class, serializer);
-            for(ApplicationClasses.ApplicationClass applicationClass : Play.classes.getAssignableClasses(GenericTreeNode.class)) {
-                builder.registerTypeAdapter(applicationClass.javaClass, serializer);
-            }
-
+            builder.registerTypeHierarchyAdapter(JSTreeNode.class, serializer);
             gson = builder.create();
         }
         return gson;

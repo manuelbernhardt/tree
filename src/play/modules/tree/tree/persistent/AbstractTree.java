@@ -3,6 +3,7 @@ package tree.persistent;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,6 +95,17 @@ public abstract class AbstractTree implements TreeDataHandler {
     protected abstract NodeType getDefaultType();
 
     /**
+     * The name of the root node that will contain all other nodes of the tree.
+     * If it is not defined, no root node will be inserted in the tree. If it is defined, a root node with
+     * the indicated name will be the only valid root node of the tree. The type of the root node is "root".
+     *
+     * @return The name of the root node for all nodes of the tree, <code>null</code> if there shouldn't be a root node.
+     */
+    protected String getRootName() {
+        return null;
+    }
+
+    /**
      * The type of the parent of all nodes in the tree, i.e. which type is at the root of the tree.
      * For the moment we don't support mixed root nodes
      *
@@ -133,7 +145,14 @@ public abstract class AbstractTree implements TreeDataHandler {
     }
 
     public List<? extends JSTreeNode> getChildren(Long parentId, String type, Map<String, String> args) {
-        return storage.getChildren(parentId, getName(), type);
+        if(getRootName() == null) {
+            return storage.getChildren(parentId, getName(), type);
+        } else {
+            RootNode rootNode = new RootNode(getRootName(), -1l, true, true, "root", storage.getChildren(parentId, getName(), type));
+            List<JSTreeNode> nodes = new ArrayList<JSTreeNode>();
+            nodes.add(rootNode);
+            return nodes;
+        }
     }
 
     public F.Tuple<Long, String> create(Long parentId, String parentType, Long position, String name, String type, Map<String, String> args) {
