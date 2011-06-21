@@ -141,4 +141,8 @@ public class TreeNode extends Model implements GenericTreeNode {
     public void doLoad() {
         this.nodeType = AbstractTree.getNodeType(this.type);
     }
+
+    public int compareTo(JSTreeNode o) {
+        return this.getName().compareTo(o.getName());
+    }
 }

@@ -1,20 +1,17 @@
 package controllers.tree;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import play.Play;
-import play.classloading.ApplicationClasses;
 import play.libs.F;
 import play.mvc.Controller;
 import play.mvc.Util;
 import tree.JSTreeNode;
 import tree.TreePlugin;
-import tree.persistent.GenericTreeNode;
-import tree.simple.SimpleNode;
 
 /**
  * Generic controller for tree operations.
@@ -106,6 +103,7 @@ public class TreeController extends Controller {
     @Util
     public static void getChildrenDirect(String treeId, Long id, String type, Map<String, String> args) {
         List<? extends JSTreeNode> children = TreePlugin.getTree(treeId).getChildren(id, type, args);
+        Collections.sort(children);
         renderJSON(getGson().toJson(children));
     }
 

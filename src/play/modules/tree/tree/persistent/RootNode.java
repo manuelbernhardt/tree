@@ -72,4 +72,8 @@ public class RootNode implements JSTreeNode {
     public void setChildren(List<JSTreeNode> children) {
         this.children = children;
     }
+
+    public int compareTo(JSTreeNode o) {
+        return this.getName().compareTo(o.getName());
+    }
 }

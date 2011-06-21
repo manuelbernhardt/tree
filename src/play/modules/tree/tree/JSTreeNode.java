@@ -7,7 +7,7 @@ import java.util.List;
  *
  * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>
  */
-public interface JSTreeNode {
+public interface JSTreeNode extends Comparable<JSTreeNode> {
 
     String getName();
     Long getId();
