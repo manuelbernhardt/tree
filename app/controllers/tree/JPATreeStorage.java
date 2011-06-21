@@ -136,9 +136,14 @@ public class JPATreeStorage extends TreeStorage {
     public boolean rename(Long objectId, String name, String treeId, String type) {
         try {
             GenericTreeNode n = findTreeNode(objectId, treeId, type);
-            n.setName(name);
-            n.setPath(computePath(n.getParent(), n, n.getName()));
-            ((Model)n).save();
+            String oldPath = n.getPath();
+            String newPath = computePath(n.getParent(), n, n.getName());
+
+            // update name
+            updateQuery("update TreeNode set name = ? where treeId = ? and type = ? and nodeId = ?", name, treeId, type, objectId);
+
+            // update paths
+            updateQuery("update TreeNode set path = concat(?, substring(path, ?, length(path))) where treeId = ? and path like ?", newPath, oldPath.length() + 1, treeId, oldPath + "%");
 
             // TODO this assumes there is a "name" field, whereas:
             // 1) it may be named differently
