@@ -3,14 +3,13 @@ package tree.simple;
 import java.util.List;
 
 import tree.JSTreeNode;
-import tree.simple.ChildProducer;
 
 /**
  * In-memory implementation of a JSTreeNode, for use with simple trees.
  *
  * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>
  */
-public class SimpleNode implements JSTreeNode {
+public class SimpleNode implements JSTreeNode, Comparable<JSTreeNode> {
     private String type;
     private String name;
     private boolean open;
@@ -52,5 +51,9 @@ public class SimpleNode implements JSTreeNode {
             throw new RuntimeException("No producer set");
         }
         return producer.produce(this.id);
+    }
+
+    public int compareTo(JSTreeNode other) {
+        return this.getName().compareTo(other.getName());
     }
 }
