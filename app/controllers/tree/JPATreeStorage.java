@@ -125,10 +125,10 @@ public class JPATreeStorage extends TreeStorage {
     @Override
     public List<JSTreeNode> getChildren(Long parentObjectId, String treeId, String type) {
         if (parentObjectId == null || parentObjectId == -1) {
-            return findJSTreeNodes("from TreeNode n where n.treeId = '" + treeId + "' and n.threadRoot = n");
+            return findJSTreeNodes("from TreeNode n where n.treeId = ? and n.threadRoot = n order by n.path asc", treeId);
         } else {
             GenericTreeNode parent = findTreeNode(parentObjectId, treeId, type);
-            return findJSTreeNodes("from TreeNode n where n.treeId = '" + treeId + "' and n.level = ? and n.path like ? and n.threadRoot = ?", parent.getLevel() + 1, parent.getPath() + "%", parent.getThreadRoot());
+            return findJSTreeNodes("from TreeNode n where n.treeId = ? and n.level = ? and n.path like ? and n.threadRoot = ? order by n.path asc",  treeId, parent.getLevel() + 1, parent.getPath() + "%", parent.getThreadRoot());
         }
     }
 

@@ -82,7 +82,7 @@ public class TreeNode extends Model implements GenericTreeNode {
     }
 
     public List<JSTreeNode> getChildren() {
-        return JPA.em().createQuery("from TreeNode n where n.treeId = '" + treeId + "' and n.level = :level and n.path like :pathLike and n.threadRoot = :threadRoot").setParameter("level", level + 1).setParameter("pathLike", path + "%").setParameter("threadRoot", threadRoot).getResultList();
+        return JPA.em().createQuery("from TreeNode n where n.treeId = '" + treeId + "' and n.level = :level and n.path like :pathLike and n.threadRoot = :threadRoot order by n.path asc").setParameter("level", level + 1).setParameter("pathLike", path + "%").setParameter("threadRoot", threadRoot).getResultList();
     }
 
     public boolean isOpen() {
