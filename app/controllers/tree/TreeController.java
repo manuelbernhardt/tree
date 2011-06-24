@@ -103,7 +103,9 @@ public class TreeController extends Controller {
     @Util
     public static void getChildrenDirect(String treeId, Long id, String type, Map<String, String> args) {
         List<? extends JSTreeNode> children = TreePlugin.getTree(treeId).getChildren(id, type, args);
-        Collections.sort(children);
+        if(children != null) {
+            Collections.sort(children);
+        }
         renderJSON(getGson().toJson(children));
     }
 
