@@ -145,13 +145,13 @@ public abstract class AbstractTree implements TreeDataHandler {
     }
 
     public List<? extends JSTreeNode> getChildren(Long parentId, String type, Map<String, String> args) {
-        if(getRootName() == null) {
-            return storage.getChildren(parentId, getName(), type);
-        } else {
+        if(getRootName() != null && (parentId == -1 || parentId == null)) {
             RootNode rootNode = new RootNode(getRootName(), -1l, true, true, "root", storage.getChildren(parentId, getName(), type));
             List<JSTreeNode> nodes = new ArrayList<JSTreeNode>();
             nodes.add(rootNode);
             return nodes;
+        } else {
+            return storage.getChildren(parentId, getName(), type);
         }
     }
 
