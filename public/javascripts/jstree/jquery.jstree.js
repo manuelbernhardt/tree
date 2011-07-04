@@ -2517,7 +2517,8 @@
 		},
 		defaults : {
 			copy_modifier	: "ctrl",
-			check_timeout	: 100,
+			always_copy     : true,
+            check_timeout	: 100,
 			open_timeout	: 500,
 			drop_target		: ".jstree-drop",
 			drop_check		: function (data) { return true; },
@@ -2609,7 +2610,7 @@
 				}
 				else {
 					this.dnd_prepare();
-					this.move_node(o, r, last_pos, e[this._get_settings().dnd.copy_modifier + "Key"]);
+					this.move_node(o, r, last_pos, this._get_settings().dnd.always_copy === true || e[this._get_settings().dnd.copy_modifier + "Key"]);
 				}
 				o = false;
 				r = false;
