@@ -2517,8 +2517,8 @@
 		},
 		defaults : {
 			copy_modifier	: "ctrl",
-			always_copy     : true,
-            check_timeout	: 100,
+			always_copy     : false,
+			check_timeout	: 100,
 			open_timeout	: 500,
 			drop_target		: ".jstree-drop",
 			drop_check		: function (data) { return true; },
