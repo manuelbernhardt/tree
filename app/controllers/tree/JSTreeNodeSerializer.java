@@ -20,6 +20,12 @@ import tree.persistent.GenericTreeNode;
  */
 public class JSTreeNodeSerializer implements JsonSerializer<JSTreeNode> {
 
+    final boolean shouldRenderNodeState;
+
+    public JSTreeNodeSerializer(boolean shouldRenderNodeState) {
+      this.shouldRenderNodeState = shouldRenderNodeState;
+    }
+
     public JsonElement serialize(JSTreeNode node, Type type, JsonSerializationContext context) {
         JsonObject o = new JsonObject();
         populateBasicProperties(node, context, o);
@@ -50,7 +56,7 @@ public class JSTreeNodeSerializer implements JsonSerializer<JSTreeNode> {
         attributes.put("id", "node_" + node.getType() + "_" + id);
         attributes.put("rel", node.getType());
         o.add("attr", context.serialize(attributes));
-        if (node.isContainer()) {
+        if (shouldRenderNodeState && node.isContainer()) {
             o.addProperty("state", state(node.isOpen()));
         }
     }

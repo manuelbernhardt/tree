@@ -122,7 +122,9 @@ public class TreeController extends Controller {
     public static Gson getGson() {
         if (gson == null) {
             final GsonBuilder builder = new GsonBuilder();
-            final JSTreeNodeSerializer serializer = new JSTreeNodeSerializer();
+            final String shouldRenderNodeStateProperty = play.Play.configuration.getProperty("tree.shouldRenderNodeState");
+            final boolean shouldRenderNodeState = (shouldRenderNodeStateProperty != null && !shouldRenderNodeStateProperty.equals("false") || shouldRenderNodeStateProperty == null);
+            final JSTreeNodeSerializer serializer = new JSTreeNodeSerializer(shouldRenderNodeState);
             builder.registerTypeHierarchyAdapter(JSTreeNode.class, serializer);
             gson = builder.create();
         }
