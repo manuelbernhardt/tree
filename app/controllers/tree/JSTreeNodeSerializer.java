@@ -1,10 +1,5 @@
 package controllers.tree;
 
-import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -12,6 +7,11 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import tree.JSTreeNode;
 import tree.persistent.GenericTreeNode;
+
+import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Serializer for JSTree nodes
@@ -53,7 +53,7 @@ public class JSTreeNodeSerializer implements JsonSerializer<JSTreeNode> {
         o.addProperty("data", node.getName());
         Map<String, Object> attributes = new HashMap<String, Object>();
         Long id = getNodeId(node);
-        attributes.put("id", "node_" + node.getType() + "_" + id);
+        attributes.put("id", buildNodeId(node, id));
         attributes.put("rel", node.getType());
         o.add("attr", context.serialize(attributes));
         if (shouldRenderNodeState && node.isContainer()) {
@@ -67,6 +67,13 @@ public class JSTreeNodeSerializer implements JsonSerializer<JSTreeNode> {
             id = ((GenericTreeNode)node).getNodeId();
         }
         return id;
+    }
+
+    protected String buildNodeId(JSTreeNode node, Long id) {
+        if(node instanceof GenericTreeNode) {
+            return "node_" + ((GenericTreeNode)node).getTreeId() + "_" + node.getType() + "_" + id;
+        }
+        return "node_" + node.getType() + "_" + id;
     }
 
     private String state(boolean open) {
