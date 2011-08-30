@@ -7,6 +7,7 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import tree.JSTreeNode;
 import tree.persistent.GenericTreeNode;
+import tree.persistent.RootNode;
 
 import java.lang.reflect.Type;
 import java.util.HashMap;
@@ -73,7 +74,10 @@ public class JSTreeNodeSerializer implements JsonSerializer<JSTreeNode> {
         if(node instanceof GenericTreeNode) {
             return "node_" + ((GenericTreeNode)node).getTreeId() + "_" + node.getType() + "_" + id;
         }
-        return "node_" + node.getType() + "_" + id;
+        if(node instanceof RootNode) {
+             return "node_" + ((RootNode)node).getTreeId() + "_" + node.getType() + "_" + id;
+         }
+         return "node_" + node.getType() + "_" + id;
     }
 
     private String state(boolean open) {

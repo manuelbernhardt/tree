@@ -15,14 +15,16 @@ public class RootNode implements JSTreeNode {
     private boolean open;
     private String type;
     private List<JSTreeNode> children;
+    private String treeId;
 
-    public RootNode(String name, Long id, boolean container, boolean open, String type, List<JSTreeNode> children) {
+    public RootNode(String name, String treeId, Long id, boolean container, boolean open, String type, List<JSTreeNode> children) {
         this.name = name;
         this.id = id;
         this.container = container;
         this.open = open;
         this.type = type;
         this.children = children;
+        this.treeId = treeId;
     }
 
     public String getName() {
@@ -75,5 +77,9 @@ public class RootNode implements JSTreeNode {
 
     public int compareTo(JSTreeNode o) {
         return this.getName().compareTo(o.getName());
+    }
+
+    public String getTreeId() {
+        return treeId;
     }
 }
